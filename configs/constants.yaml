@@ -1,0 +1,102 @@
+# subcell_classes.yaml
+
+subcell_classes:
+  - Actin filaments
+  - Aggresome
+  - Cell Junctions
+  - Centriolar satellite
+  - Centrosome
+  - Cytokinetic bridge
+  - Cytoplasmic bodies
+  - Cytosol
+  - Endoplasmic reticulum
+  - Endosomes
+  - Focal adhesion sites
+  - Golgi apparatus
+  - Intermediate filaments
+  - Lipid droplets
+  - Lysosomes
+  - Microtubules
+  - Midbody
+  - Mitochondria
+  - Mitotic chromosome
+  - Mitotic spindle
+  - Nuclear bodies
+  - Nuclear membrane
+  - Nuclear speckles
+  - Nucleoli
+  - Nucleoli fibrillar center
+  - Nucleoli rim
+  - Nucleoplasm
+  - Peroxisomes
+  - Plasma membrane
+  - Vesicles
+  - Negative
+
+condensed_classes:
+  Actin filaments:
+    - Actin filaments
+  Cytosol:
+    - Cytosol
+  Endoplasmic reticulum:
+    - Endoplasmic reticulum
+  Golgi apparatus:
+    - Golgi apparatus
+  Intermediate filaments:
+    - Intermediate filaments
+  Microtubules:
+    - Microtubules
+  Mitochondria:
+    - Mitochondria
+  Mitotic:
+    - Mitotic chromosome
+    - Mitotic spindle
+    - Midbody
+    - Cytokinetic bridge
+  Nuclear membrane:
+    - Nuclear membrane
+  Nuclear speckles:
+    - Nuclear speckles
+    - Nuclear bodies
+  Nucleoli:
+    - Nucleoli
+    - Nucleoli fibrillar center
+    - Nucleoli rim
+  Nucleoplasm:
+    - Nucleoplasm
+  Plasma membrane:
+    - Plasma membrane
+  Vesicles:
+    - Vesicles
+    - Endosomes
+    - Lipid droplets
+    - Peroxisomes
+    - Aggresome
+    - Cytoplasmic bodies
+    - Lysosomes
+  Other:
+    - Centriolar satellite
+    - Centrosome
+    - Focal adhesion sites
+    - Cell Junctions
+  Negative:
+    - Negative
+
+markers:
+  - DAPI
+  - TOMM20
+  - alphaTUBULIN
+  - SC35
+  - SP100
+  - WGA
+  - SON
+  - VIMENTIN
+  - LAMP1
+  - COILIN
+  - GM130
+  - G3BP1
+  - TFAM
+  - Ki67
+  - NPM1
+
+probability_prefix: soft_prob

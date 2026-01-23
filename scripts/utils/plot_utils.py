@@ -87,14 +87,14 @@ def create_filter_controls(df, filter_cols, cfg, max_visible=15, per_item_px=17)
     return filters, filter_widgets
 
 
-def ensure_df_columns(df, cfg, df_path):
+def ensure_df_columns(df, df_path):
     # check if there are nans
     if df.isnull().values.any():
         nan_rows = df[df.isnull().any(axis=1)]
         print(nan_rows)
         raise ValueError(f"DataFrame {df_path} contains NaN values. Please check the input data.")
 
-    if f'UMAP1' not in df.columns or cfg.save_umap:
+    if f'UMAP1' not in df.columns:
         if f'UMAP1' in df.columns:
             df = df.drop(columns=[f'UMAP1', f'UMAP2'])
         
@@ -235,7 +235,7 @@ def create_tab(file_name, cfg):
 
     df = pd.read_csv(file_name, low_memory=False, sep='\t')
 
-    df = ensure_df_columns(df, cfg, file_name)
+    df = ensure_df_columns(df, file_name)
     
     print(f"Loaded {file_name} with {len(df)} rows")
     filter_cols = df.columns
