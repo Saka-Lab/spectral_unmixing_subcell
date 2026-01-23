@@ -1,0 +1,65 @@
+# ======================
+# Layout
+# ======================
+min_width: 200
+widget_width: 275
+min_plot_width: 800
+min_plot_height: 500
+init_dot_size: 10
+init_alpha: 0.7
+
+max_legend_entries: 31
+
+# ======================
+# Highlighting
+# ======================
+highlighted_cells: ['FOV3_6', 'FOV3_8']
+highlight_color: black
+highlight_width: 3
+
+# ======================
+# Marker symbols
+# ======================
+t1: circle
+t2: diamond
+t3: square
+t4: plus
+
+marker_sizes:
+  circle: 8
+  diamond: 12
+  square: 12
+  plus: 12
+
+  
+# ======================
+# Shape configuration
+# ======================
+shape_by: protein   # cell_cycle_phase | protein | condition
+
+marker_types:
+  cell_cycle_phase:
+    Interphase: circle
+    Prophase: square
+    Prometaphase: square
+    Metaphase: square
+    Anaphase: square
+    Telophase: square
+    Cytokinesis: square
+    Unknown: diamond
+    Dying: diamond
+    Artifact: diamond
+    Problem: diamond
+    Unexpected: diamond
+    Border: diamond
+    Exclude: diamond
+
+  protein:
+    alpha-tubulin: diamond
+    G3BP1: diamond
+    NPM1: square
+
+  condition:
+    Untreated: circle
+    ActD: circle
+    SA: circle

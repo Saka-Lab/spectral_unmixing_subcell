@@ -1,0 +1,11 @@
+*.png
+*.tiff
+*.tif
+*.lif
+*.pyc
+*.pth
+*.h5
+logs/
+*.csv
+*.tsv
+*.svg
