@@ -1,0 +1,35 @@
+[project]
+authors = ["Elena Pianfetti <elena.pianfetti@embl.de>", "Wouter-Michiel Vierdag <michiel.vierdag@embl.de>"]
+channels = ["conda-forge", "pytorch"]
+description = "Using SubCell for classification in spectrally unmixed images."
+name = "Highly multiplexed SubCell"
+platforms = ["osx-arm64", "linux-64", "win-64"]
+version = "0.1.0"
+
+[dependencies]
+python = "3.11.*"
+loguru = ">=0.7.3,<0.8"
+
+[tool.pixi.pypi-dependencies]
+pixi_py = { path = ".", editable = true }
+
+[feature.napari-microsam.dependencies]
+micro_sam = "*"
+
+[feature.napari-microsam.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu118" }
+
+[feature.napari-microsam.target.osx-arm64.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cpu" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cpu" }
+
+[feature.preprocess.pypi-dependencies]
+bioio = "*"
+bioio-lif = "*"
+bioio-ome-tiff = "*"
+bioio-tifffile = "*"
+
+[environments]
+napari = { features = ["napari-microsam"], solve-group = "default" }
+preprocess = { features = ["preprocess"], solve-group = "default" }
