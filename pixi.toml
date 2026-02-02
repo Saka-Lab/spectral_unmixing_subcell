@@ -9,6 +9,8 @@ version = "0.1.0"
 [dependencies]
 python = "3.11.*"
 loguru = ">=0.7.3,<0.8"
+typer = ">=0.21.1,<0.22"
+tqdm = ">=4.67.2,<5"
 
 [tool.pixi.pypi-dependencies]
 pixi_py = { path = ".", editable = true }
@@ -29,6 +31,9 @@ bioio = "*"
 bioio-lif = "*"
 bioio-ome-tiff = "*"
 bioio-tifffile = "*"
+
+[feature.preprocess.tasks]
+split-images = "python ./scripts/split_lif.py"
 
 [environments]
 napari = { features = ["napari-microsam"], solve-group = "default" }
