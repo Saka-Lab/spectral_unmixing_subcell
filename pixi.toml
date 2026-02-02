@@ -15,26 +15,30 @@ tqdm = ">=4.67.2,<5"
 [tool.pixi.pypi-dependencies]
 pixi_py = { path = ".", editable = true }
 
-[feature.napari-microsam.dependencies]
+[feature.preprocess.dependencies]
 micro_sam = "*"
 
-[feature.napari-microsam.pypi-dependencies]
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
-torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu118" }
+[feature.subcell.dependencies]
+micro_sam = "*"
 
-[feature.napari-microsam.target.osx-arm64.pypi-dependencies]
+[feature.preprocess.target.osx-arm64.pypi-dependencies]
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cpu" }
 torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cpu" }
 
 [feature.preprocess.pypi-dependencies]
-bioio = "*"
-bioio-lif = "*"
-bioio-ome-tiff = "*"
-bioio-tifffile = "*"
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu118" }
 
 [feature.preprocess.tasks]
 split-images = "python ./scripts/split_lif.py"
+preprocess = "python ./scripts/preprocessing.py"
 
 [environments]
-napari = { features = ["napari-microsam"], solve-group = "default" }
 preprocess = { features = ["preprocess"], solve-group = "default" }
+subcell = { features = ["subcell"], solve-group = "default" }
+
+[pypi-dependencies]
+bioio = "*"
+bioio-lif = "*"
+bioio-ome-tiff = "*"
+bioio-tifffile = ">=1.3.0, <2"

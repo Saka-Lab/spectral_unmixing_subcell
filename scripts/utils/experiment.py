@@ -25,10 +25,11 @@ import h5py
 
 import logging
 import datetime
-from utils.utils import get_model
+# from utils.utils import get_model
 from skimage.io import imread
 import utils.inference as inference
 from utils.utils import parse_id
+from loguru import logger
 
 # correct classes:
 
@@ -76,7 +77,7 @@ class Preprocess:
         self, name, exp_dir, channels, 
         min_th, max_th,
         seg_channels, seg_model, n_dim,
-        min_cell_area, min_border_area,
+        min_cell_area,
         tmp_dir='tmp', res_dir='preprocessing_results'
         ):
         self.name = name
@@ -94,7 +95,6 @@ class Preprocess:
 
         # mask processing
         self.min_cell_area = min_cell_area
-        self.min_border_area = min_border_area
 
         # folders setup
         self.tmp_dir = tmp_dir
@@ -113,7 +113,7 @@ class Preprocess:
 
     def _save_image(self, image_data, save_path, channel_names=None):
         # Save the processed image data to the specified path
-        print(f"Saving image to: {save_path}")
+        logger.info(f"Saving image to: {save_path}")
         # check if the directory exists
         save_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -138,17 +138,15 @@ class Preprocess:
         if clamp_path.exists():
             return clamp_path
 
-        img_data = BioImage(img_path).data
-        # BioImage is a 5D array: T C Z Y X
-        img_data = img_data[0]
+        img_data = BioImage(img_path).get_image_data("CZYX")
 
         normalized_channels = []
-        C = img_data.shape[0]
-        for c in range(C):
-            channel = img_data[c]
+        num_ch = img_data.shape[0]
+        for ch_ind in range(num_ch):
+            channel = img_data[ch_ind]
             # find the value at the th percentile
-            max_value_th = int(np.percentile(channel, float(self.max_th)))
-            min_value_th = int(np.percentile(channel, float(self.min_th)))
+            max_value_th = int(np.percentile(channel, self.max_th))
+            min_value_th = int(np.percentile(channel, self.min_th))
             min_value_th = max(1, min_value_th)  # ensure min_th is at least 1 to at least remove something
             channel[channel > max_value_th] = max_value_th
             channel[channel <= min_value_th] = min_value_th
@@ -196,7 +194,7 @@ class Preprocess:
 
         predictor, segmentor = get_predictor_and_segmenter(model_type=self.seg_model)
 
-        instances = automatic_instance_segmentation(
+        automatic_instance_segmentation(
                 predictor=predictor,
                 segmenter=segmentor,
                 input_path=img_path,
@@ -221,13 +219,13 @@ class Preprocess:
         try:
             Z, H, W = mask_data.shape
         except ValueError:
-            print("Unexpected mask shape:", mask_data.shape)
+            logger.debug("Unexpected mask shape:", mask_data.shape)
             if len(mask_data.shape) == 4 and mask_data.shape[0] == 1:
                 mask_data = mask_data[0]
                 Z, H, W = mask_data.shape
             else:
                 raise ValueError(f"Unsupported mask shape: {mask_data.shape}")
-        areas = []
+
         unique_labels = [label for label in np.unique(mask_data) if label != 0] # skip the background label
         labels_to_keep = []
         # Analyze slice z=0 for filtering
@@ -262,29 +260,29 @@ class Preprocess:
         Process images for the experiment.
         This method will separate the images into scenes and save them in the temporary directory.
         """
-        print(f"\n=== Running {self.name} ===")
+        logger.info(f"\n=== Running {self.name} ===")
         image_files = sorted(self.exp_dir.glob("*.tif"))
  
         if not image_files:
-            print(f"No images found for {self.name} in {self.exp_dir}")
+            logger.debug(f"No images found for {self.name} in {self.exp_dir}")
             return
         else:
-            print(f"Found {len(image_files)} images.")
+            logger.info(f"Found {len(image_files)} images.")
 
         for img_path in image_files:
-            print(f"Processing image: {img_path}")
+            logger.info(f"Processing image: {img_path}")
             clamped = self._clamp_and_convert(img_path, self.channels)
 
             # if manual segmentations already exist skip greyscale, segmentation and mask processing
             if (self.res_dir/"manual_segmentations"/self.name/img_path.name).exists():
-                print(f"Manual segmentation already exists: {(self.res_dir/'manual_segmentations'/self.name/img_path.name)}")
+                logger.info(f"Manual segmentation already exists: {(self.res_dir/'manual_segmentations'/self.name/img_path.name)}")
                 continue
             if (self.res_dir/"segmentations"/self.name/img_path.name).exists():
-                 print(f"Segmentation image already exists: {(self.res_dir/'segmentations'/self.name/img_path.name)}")
+                 logger.info(f"Segmentation image already exists: {(self.res_dir/'segmentations'/self.name/img_path.name)}")
                  continue
             greyscale = self._convert_to_greyscale(clamped)
             mask = self._segment_image(greyscale)
-            cleaned_mask = self._clean_mask(mask)
+            self._clean_mask(mask)
 
 
 class Subcell:

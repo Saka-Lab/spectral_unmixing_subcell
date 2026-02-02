@@ -21,7 +21,7 @@ visualization with bokeh:
 The raw image data should be stored in a directory called `data`, which is present in this project directory.
 In this directory, for running the workflow with default parameters, it is expected that there is a directory called 
 `raw`. This directory contains experiment directories with names of the user's choice, that should contain either
-'.lif' or '.tif', '.tiff' images. The dimension names and order of these images is expected to be `czyx`. The images
+`.lif` or `.tif`, `.tiff` images. The dimension names and order of these images is expected to be `czyx`. The images
 can contain one or multiple scenes (Fields of View).
 
 ## Getting started
@@ -89,6 +89,42 @@ Both `experiments` and `channels` can be a list of strings. The way to provide m
 `pixi run split_images -c ch1 -c ch2 -c ch3`
 
 #### Preprocessing of images
+The code for preprocessing of the images includes a percentile normalization step as well segmentation
+using micro-sam (paper [here](https://www.nature.com/articles/s41592-024-02580-4)). Due to naming,
+the code is specific to the data used in the paper. To run it, run the following in a terminal with this
+directory as current working directory:
+
+`pixi run preprocess`
+
+Additional parameters can be provided (please also see mentioned defaults):
+![preprocess](readme_images/preprocess.png)
+
+By default, the preprocessing output and intermediate results are stored in `data/preprocessing_results`. This directory
+will contain three directories: `8bits`, `greyscale` and `segmentations`. The `8bits` folder contains a directory 
+`<min-th_max-th` containing normalized 8 bit images. The `greyscale` directory contains the 8 bit images which are 
+filtered to only include the segmentation channels (`DAPI`, `VIMENTIN`, `WGA`, `alphaTUBULIN`), sum projected, normalized
+and converted to 8 bit. These images are used as input for segmentation, the output of which are stored in the 
+third directory called `segmentations`. The directory structure after running the preprocessing should look something
+like this:
+
+![output_preprocess](readme_images/output_preprocess.png)
+
+It can be that segmentations have to be corrected afterwards. Subcell is expecting close to perfect segmentations. When 
+stored using the same name as the automated segmentation image in a directory called `manual_segmentations` within the 
+directory choosen as output directory, segmentation will be skipped if automated segmentation is rerun (this is also
+the case for any automated segmentations already existing).
+
+<details>
+It can be that you see an error message when the segmentation images are being read for automated cleaning (removing
+small segmentation objects and border cells). This is because micro-sam does store tiff, but `bioio` tries to read
+first with the `bioio-ome-tif` reader, before falling back to the basic `tif` reader. This message can be ignored.
+</details>
+
+#### Running subcell
+
+
+
+
 
 
 
