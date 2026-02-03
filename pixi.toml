@@ -18,9 +18,6 @@ pixi_py = { path = ".", editable = true }
 [feature.preprocess.dependencies]
 micro_sam = "*"
 
-[feature.subcell.dependencies]
-micro_sam = "*"
-
 [feature.preprocess.target.osx-arm64.pypi-dependencies]
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cpu" }
 torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cpu" }
@@ -29,13 +26,32 @@ torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
 torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu118" }
 
+[feature.subcell.target.osx-arm64.pypi-dependencies]
+torch = { version = "==2.4.1", index = "https://download.pytorch.org/whl/cpu" }
+torchvision = { version = "==0.19.*", index = "https://download.pytorch.org/whl/cpu" }
+
+[feature.subcell.pypi-dependencies]
+torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu118" }
+transformers = "==4.45.1"
+numpy = "<2"
+scikit-image = ">=0.26.0, <0.27"
+h5py = ">=3.15.1, <4"
+einops = ">=0.8.2, <0.9"
+boto3 = ">=1.42.40, <2"
+
 [feature.preprocess.tasks]
-split-images = "python ./scripts/split_lif.py"
-preprocess = "python ./scripts/preprocessing.py"
+split-images = "python ./subcell/split_lif.py"
+preprocess = "python ./subcell/preprocessing.py"
+
+[feature.subcell.tasks]
+subcell = "python ./subcell/subcell.py"
+
+[feature.subcell.dependencies]
 
 [environments]
-preprocess = { features = ["preprocess"], solve-group = "default" }
-subcell = { features = ["subcell"], solve-group = "default" }
+preprocess = { features = ["preprocess"], solve-group = "'torch-new'" }
+subcell = { features = ["subcell"], solve-group = "torch-old" }
 
 [pypi-dependencies]
 bioio = "*"

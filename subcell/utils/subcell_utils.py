@@ -17,7 +17,7 @@ import utils.inference as inference
 from tqdm import tqdm
 import logging
 
-from scripts.utils.cellregions import CellRegionDataset
+from .cellregions import CellRegionDataset, Spec3D
 import torch
 import einops
 

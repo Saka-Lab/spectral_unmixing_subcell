@@ -13,8 +13,6 @@ from tqdm import tqdm
 from scipy.ndimage import binary_fill_holes
 from skimage.morphology import erosion, disk, dilation
 
-
-from utils.utils import parse_id
 from loguru import logger
 
 
@@ -107,7 +105,6 @@ class Preprocess:
         image_data = np.stack(normalized_channels, axis=0)
         self._save_image(image_data, clamp_path, channel_names)
         return clamp_path
-
 
     def _convert_to_greyscale(self, img_path):
         greyscale_path = self.res_dir/"greyscale"/f"{self.min_th}_{self.max_th}"/self.name/img_path.name
@@ -218,8 +215,8 @@ class Preprocess:
         else:
             logger.info(f"Found {len(image_files)} images.")
 
-        for img_path in image_files:
-            logger.info(f"Processing image: {img_path}")
+        for index, img_path in tqdm(enumerate(image_files), total=len(image_files)):
+            logger.info(f"Processing image {index+1} out of {len(image_files)}: {img_path}")
             clamped = self._clamp_and_convert(img_path, self.channels)
 
             # if manual segmentations already exist skip greyscale, segmentation and mask processing

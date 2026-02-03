@@ -75,7 +75,7 @@ This installs the dependencies for all environments related to this project.
 
 ## Running the workflow
 
-### Overview
+### Overview of subcell workflow
 #### Splitting images into 1 scene per image file
 The workflow starts from either raw `.lif` or `.tif` / `tiff` images. These are split into individual channel
 images by running a CLI. To run with default parameters, in the command line ensure that you are in this repository directory and run: 
