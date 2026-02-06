@@ -121,7 +121,15 @@ first with the `bioio-ome-tif` reader, before falling back to the basic `tif` re
 </details>
 
 #### Running subcell
+To run SubCell with the default configuration, just run the following from the terminal:
 
+`pixi run subcell`
+
+By default, the input data expects the `preprocessing_results` directory as input with in there the `8bit` directory
+containing the 8 bit images generated during preprocessing. Percentile normalization can be performed prior to running 
+the SubCell model. For more information see the `--help`:
+
+![subcell_help](readme_images/subcell_help.png)
 
 
 
