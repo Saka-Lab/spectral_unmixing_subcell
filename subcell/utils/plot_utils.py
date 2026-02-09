@@ -347,7 +347,7 @@ def create_tab(file_name, cfg):
                     kdims=["UMAP1", "UMAP2"],
                     vdims=filter_cols + ["size", "is_highlighted"]
                 ).opts(
-                    marker=marker,                      # 🔒 FIXED marker
+                    marker=marker,
                     size=hv.dim("size") * 1.5,
                     color=color_by,
                     cmap=cfg.colormap_dict.get(color_by, "Category10"),
