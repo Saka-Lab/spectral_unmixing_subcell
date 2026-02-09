@@ -2,21 +2,16 @@ from bioio import BioImage
 import numpy as np
 from bioio.writers import OmeTiffWriter
 
-# micro_sam imports
 from micro_sam.automatic_segmentation import (
     get_predictor_and_segmenter,
     automatic_instance_segmentation,
 )
 
-# mask processing
 from tqdm import tqdm
 from scipy.ndimage import binary_fill_holes
 from skimage.morphology import erosion, disk, dilation
 
 from loguru import logger
-
-
-# correct classes:
 
 
 class Preprocess:
@@ -56,7 +51,6 @@ class Preprocess:
         min_cell_area={self.min_cell_area}, min_border_area={self.min_border_area},
         tmp_dir={self.tmp_dir}, res_dir={self.res_dir}
         )\n"""
-        
 
     def _save_image(self, image_data, save_path, channel_names=None):
         # Save the processed image data to the specified path
