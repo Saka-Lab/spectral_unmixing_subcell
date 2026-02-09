@@ -41,7 +41,7 @@ def configure_experiment_channels(experiment):
 @app.command()
 def main(
         input_dir: Path = typer.Option(
-            Path("data/preprocessing_results"),
+            Path.cwd() / "data" / "preprocessing_results",
             "--input-dir",
             "-i",
             help="Directory containing subdirectories of experiments that contain single FOV image files",
@@ -59,13 +59,9 @@ def main(
             '{"x": 1, "y": 1, "z": 8}',
             "--downsample-kernel",
             "-dk",
-            help="Downsample kernel",
-        ),
-        channel_order: str = typer.Option(
-            "XYZC",
-            "--channel-order",
-            "-co",
-            help="Channel order by which to read in the data. Should be all capitalized.",
+            help="Downsample kernel. This is used as input to einops.reduce. If defined, should only define"
+                 "downsampling for `x`, `y` and `z` axes. Given an image with z 80 if z is defined as 8, will result"
+                 "in z being 10. Downsampling is performed with the defined downsampling method.",
         ),
         model_channels: str = typer.Option(
             "rbg",
@@ -100,11 +96,13 @@ def main(
             Path("data/subcell_results"),
             "--output-dir",
             "-o",
+            help="Output directory of the final results of the SubCell experiment. B"
         ),
         gpu: int = typer.Option(
             0,
             "--gpu",
             "-g",
+            help="Index of the GPU device to use (e.g., 0 for first GPU, 1 for second)"
         ),
         bg_masking: Annotated[bool, typer.Option(
             "--bg-masking",
@@ -134,7 +132,6 @@ def main(
     transform = partial(
         preprocess_tensor,
         tile_spec=cell_patch_size,
-        channel_str=channel_order,
         downsample_kernel=downsample_kernel,
         downsampling_method=downsampling_method,
     )

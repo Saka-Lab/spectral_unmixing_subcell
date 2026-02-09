@@ -16,13 +16,7 @@ from skimage.measure._regionprops import RegionProperties
 
 def load_img_data(img_path, axis_str):
     """Load image data from file."""
-    img_data = BioImage(img_path).data
-    # AICSImage returns TCZYX
-    if axis_str == 'CZYX':
-        img_data = img_data[0, :]
-    elif axis_str == 'ZYX':
-        img_data = img_data[0, 0, :]
-    return img_data
+    return BioImage(img_path).get_image_data(axis_str)
 
 
 def get_patch(regionprop, patch, patch_size, bg_masking):
@@ -119,7 +113,7 @@ class Spec3D:
 class CellRegionDataset(Dataset):
     def __init__(
         self, img_dir, labels_dir, patch_size, bg_masking, h5_dir,
-        transform=None, experiment_name=None, min_th: float = None, max_th: float = None,
+        transform=None, experiment_name=None
     ):
 
         self.transform = transform

@@ -4,7 +4,9 @@ from utils.preprocess_utils import get_experiments
 from utils.experiment import Preprocess
 from loguru import logger
 from tqdm import tqdm
+from datetime import datetime
 
+logger.add(f"logs/preprocessing/{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
 app = typer.Typer(help="Process and run Subcell on multiplexed images.")
 
 CHANNELS_15PLEX = ["DAPI", "TOMM20", "alphaTUBULIN", "SC35", "SP100", "WGA", "SON", "VIMENTIN", "LAMP1", "COILIN", "GM130", "G3BP1", "TFAM", "Ki67", "NPM1"]

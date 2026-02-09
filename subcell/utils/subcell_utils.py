@@ -1,8 +1,10 @@
+import subprocess
 from pathlib import Path
 import os
 import requests
 import yaml
 from urllib.parse import urlparse
+import shutil
 
 import pandas as pd
 import boto3
@@ -18,7 +20,6 @@ from tqdm import tqdm
 import logging
 
 from .cellregions import CellRegionDataset, Spec3D
-import torch
 import einops
 
 import torchvision
@@ -65,6 +66,48 @@ acceptable_classification = {
     "Ki67":	["Nucleoli rim", "Nucleoli fibrillar center", "Nuclear membrane"],
     "NPM1":	["Nucleoli rim", "Nucleoli fibrillar center", "Nuclear speckles"]
 }
+
+
+def get_condition(im_name):
+    """
+    This function will have to be adapted based on the experiment naming conventions.
+    """
+
+    # List of condition names and their possible keywords in the image name
+    actD = ['ActD', 'Act D', 'ActinomycinD', 'Actinomycin D']
+    sodium_arsenite = ['Sodium Arsenite', 'SodiumArsenite', 'NaAsO2', 'NaAsO']
+    control = ['Control', 'control', 'Unperturbed', 'unperturbed', 'Untreated', 'untreated']
+
+    conditions_map = {
+        'ActD': actD,
+        'SodiumArsenite': sodium_arsenite,
+        'Control': control
+    }
+
+    for condition, keywords in conditions_map.items():
+        for keyword in keywords:
+            if keyword in im_name:
+                return condition
+    return 'Unknown'
+
+
+def parse_id(id_str):
+
+    parts = id_str.split('_')
+
+    cell_id = parts[-2]
+    protein = parts[-1]
+    image_name = '_'.join(parts[0:-2])
+    unique_cell_id = f"{image_name}_{cell_id}"
+    condition = get_condition(image_name)
+
+    return {
+        'condition': condition,
+        'cell_id': cell_id,
+        'protein': protein,
+        'image_name': image_name,
+        'unique_cell_id': unique_cell_id
+    }
 
 
 class Subcell:
@@ -115,8 +158,6 @@ class Subcell:
             h5_dir=out_path,
             bg_masking=bg_masking,
             experiment_name=self.name,
-            min_th=self.min_th,
-            max_th=self.max_th,
         )
 
         protein_channel_map = {channel: i for i, channel in enumerate(self.channels)}
@@ -404,6 +445,7 @@ def get_model(config):
     model.load_model_dict(encoder_path, classifier_paths)
     return model, classifier_paths
 
+
 def check_img_dims(img, patch_size):
     assert len(img.shape) == 4, f"Expected 4D tensor, got {len(img.shape)}D tensor"
     return einops.reduce(img, "c x y z -> c x y", "sum", z=1, x=patch_size.x, y=patch_size.y)
@@ -412,12 +454,8 @@ def check_img_dims(img, patch_size):
 def preprocess_tensor(
     img,
     tile_spec,
-    lower_percentile=1,
-    upper_percentile=99,
-    channel_str=None,
     downsample_kernel=None,
     downsampling_method="mean",
-    clamp=True,
 ):
     """
     Clamps and scales each channel of the input tensor based on specified percentiles.
@@ -437,22 +475,17 @@ def preprocess_tensor(
     else:
         img = torch.tensor(img, dtype=torch.float32)
 
-    if channel_str is not None:
-        img = einops.rearrange(img, f"{' '.join(channel_str)} -> C Z Y X")
+    img = einops.rearrange(img, f"X Y Z C -> C Z Y X")
 
     # downsample kernel is 1 1 8 --> no downsampling on x and y, downsample on z
     if downsample_kernel is not None:
-        if "z-stack" in downsampling_method:
-            level = downsampling_method.split(':')[1]
-            img = img[:, int(level):int(level)+1, :, :]
-        else:
-            img = einops.reduce(
-                img, "C (z z1) (y y1) (x x1) -> C z y x",
-                downsampling_method,
-                x1=downsample_kernel.x,
-                y1=downsample_kernel.y,
-                z1=downsample_kernel.z,
-            )
+        img = einops.reduce(
+            img, "C (z z1) (y y1) (x x1) -> C z y x",
+            downsampling_method,
+            x1=downsample_kernel.x,
+            y1=downsample_kernel.y,
+            z1=downsample_kernel.z,
+        )
 
         tile_spec = Spec3D(
             int(tile_spec.x / downsample_kernel.x),
@@ -460,34 +493,31 @@ def preprocess_tensor(
             int(tile_spec.z / downsample_kernel.z),
         )
 
+    # Create flat view (e.g. collaps zyx, but keep c which is 0 index of the tensor shape.
+    img_flat = img.view(img.shape[0], -1)
 
-    # Flatten spatial dimensions for percentile computation
-    img = einops.rearrange(img, "C Z Y X -> (Z Y X) C", Z=tile_spec.z, Y=tile_spec.y, X=tile_spec.x)
-
-    # Compute lower and upper percentile values for each channel
-    lower_values = torch.quantile(img, lower_percentile / 100.0, dim=0)
-    upper_values = torch.quantile(img, upper_percentile / 100.0, dim=0)
-
-    if clamp:
-        # Clamp the tensor based on computed percentiles
-        img = torch.clamp(img, min=lower_values, max=upper_values) # <lower_percentile set to lower_percentile and >upper_percentile set to upper_percentile
-    else:
-        img = torch.where(img < lower_values, 0, img)
-        img = torch.where(img > upper_values, upper_values, img)
+    # Compute lower and upper percentile values for each channel. Notice that previously this was globally or the FOV
+    # but here is it per cell as parts of the cell could be brighter than other parts. The assumption is that by doing
+    # this, the model will focus more on structure and less on intensity (not tested).
+    lower_values = torch.quantile(img_flat, 0.01, dim=1, keepdim=True)
+    upper_values = torch.quantile(img_flat, 0.99, dim=1, keepdim=True)
+    img_flat = torch.clamp(img_flat, min=lower_values, max=upper_values)
 
     # Avoid division by zero in case upper and lower values are equal
-    denominator = upper_values - lower_values
-    denominator[denominator == 0] = 1  # Set denominator to 1 where upper == lower
+    range_values = upper_values - lower_values
+    range_values = torch.where(range_values == 0, torch.ones_like(range_values), range_values)
     # Scale the clamped tensor to range [0, 1]
-    img = (img - lower_values) / denominator
+    img_flat = (img_flat - lower_values) / range_values
+
     # rearrange dims to C X Y Z
-    img = einops.rearrange(img, "(Z Y X) C -> C X Y Z", Z=tile_spec.z, Y=tile_spec.y, X=tile_spec.x)
+    img = einops.rearrange(img_flat, "C (Z Y X) -> C X Y Z", Z=tile_spec.z, Y=tile_spec.y, X=tile_spec.x)
 
     # check if all channels are 0 to 1 scaled
     for channel in img:
         assert channel.min() == 0 and (channel.max() == 1 or channel.max() == 0), f"Channel {channel} not in range [0, 1], got {channel.min()} to {channel.max()}"
 
     return img
+
 
 def repack_h5_file(input_path, remove_original=True):
     input_path = Path(input_path)

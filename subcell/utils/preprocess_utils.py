@@ -6,6 +6,7 @@ import torch
 # import einops
 import numpy as np
 import pandas as pd
+from loguru import logger
 from bioio import BioImage
 
 
@@ -17,50 +18,8 @@ def get_experiments(input_dir):
     experiments = sorted(experiments)
     if not experiments:
         raise ValueError(f"No experiments found in {input_dir}. Please check the directory structure.")
-    print(f"Found {len(experiments)} experiments in {input_dir}.")
+    logger.info(f"Found {len(experiments)} experiments in {input_dir}.")
     return experiments
-
-
-def parse_id(id_str):
-
-    parts = id_str.split('_')
-
-    cell_id = parts[-2]
-    protein = parts[-1]
-    image_name = '_'.join(parts[0:-2])
-    unique_cell_id = f"{image_name}_{cell_id}"
-    condition = get_condition(image_name)
-
-    return {
-        'condition': condition,
-        'cell_id': cell_id,
-        'protein': protein,
-        'image_name': image_name,
-        'unique_cell_id': unique_cell_id
-    }
-
-
-def get_condition(im_name):
-    """
-    This function will have to be adapted based on the experiment naming conventions.
-    """
-
-    # List of condition names and their possible keywords in the image name
-    actD = ['ActD', 'Act D', 'ActinomycinD', 'Actinomycin D']
-    sodium_arsenite = ['Sodium Arsenite', 'SodiumArsenite', 'NaAsO2', 'NaAsO']
-    control = ['Control', 'control', 'Unperturbed', 'unperturbed', 'Untreated', 'untreated']
-
-    conditions_map = {
-        'ActD': actD,
-        'SodiumArsenite': sodium_arsenite,
-        'Control': control
-    }
-
-    for condition, keywords in conditions_map.items():
-        for keyword in keywords:
-            if keyword in im_name:
-                return condition
-    return 'Unknown'
 
 
 def load_data(input_dir, annotations_dir, round_name, model, interphase_only=False, rename_map=None):
