@@ -12,7 +12,7 @@ For more information about SubCell, see the [SubCell paper](https://www.biorxiv.
 First there should be a `configs` directory. This directory contains configurations for the interactive
 visualization with bokeh:
         
-- colormaps.json: explain more here
+- colormaps.json: explain more here, test push
 - constant.yaml:
 - plot_config.yaml:
 - umap_config.yaml:
