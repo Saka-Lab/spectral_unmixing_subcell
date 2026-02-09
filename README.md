@@ -131,6 +131,8 @@ the SubCell model. For more information see the `--help`:
 
 ![subcell_help](readme_images/subcell_help.png)
 
+For preprocessing the tensors, the image is first downsampled using the specified downsampling method. 
+Next a per channel normalization is applied (1st and 99th percentile)
 
 
 
