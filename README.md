@@ -9,13 +9,44 @@ For more information about SubCell, see the [SubCell paper](https://www.biorxiv.
 ## Expected directory structure and naming
 
 ### Configs
-First there should be a `configs` directory. This directory contains configurations for the interactive
-visualization with bokeh:
+First there should be a `configs` directory. This directory contains configurations for the interactive visualization with bokeh:
         
-- colormaps.json: explain more here, test push
-- constant.yaml:
-- plot_config.yaml:
-- umap_config.yaml:
+#### colormaps.json
+This file defines how elements are colored in the umap and in the boxplots.
+By default elements are colored with Category10 colormap.
+This file can be added for customizations.
+The file needs to be structured as json, each top-level key corresponds to the column in the data (condition, cell_cycle_phase, image_name, ...), its corresponding value needs to be a dictionary that maps each element to a color.
+Here is an example in which for cell_id the colormap used is Turbo, while for the condition custom colors are defined.
+```
+{
+    "cell_id": "Turbo",
+    "condition": {
+        "Untreated": "#d81b60",
+        "SA": "#1e88e5",
+        "ActD": "#ffc107",
+        "Unknown": "#7f7f7f"
+    },
+}
+```
+
+#### constants.yaml
+This file contains:
+- the list of the 30 subcell classes,
+- the mapping used to condense them into 15 classes (e.g. Nucleoli was redefined as Nucleoli + Nucleoli fibrillar center + Nucleoli rim),
+- the list of 15 channel names.
+
+#### umap_config.yaml
+This file can be used to customize the umap output. Different elements can be customized:
+
+- The minimum width of the side panels can be defined.
+- The initial transparence of the points.
+- The maximum number of elements shown in the legend can be customized, this is particularly useful when coloring by cell_id, where the number of unique values if very large but the representation is useful to see whether all markers for a cell cluster together. ```The tooltip can be then used to extract the cell_id if needed. ```
+
+- A list of cells to be highlighted, along with the color and width of the border around the highlighted cell can be customized.
+
+- The marker shapes, first a list of markers can be defined along with their sizes, then the column for which the shapes will be changed can be selected, and finally for each element of the column a partiular marker can be defined.
+
+- tooltip elements can be chosen. Each element requires two values: 'column' which is the name of the column in the dataframe, and 'label' which is what will be shown in the tooltip.
 
 ### Image Data
 The raw image data should be stored in a directory called `data`, which is present in this project directory.

@@ -7,6 +7,7 @@ import panel as pn
 import holoviews as hv
 import yaml
 from types import SimpleNamespace
+from bokeh.io import export_svgs
 
 hv.extension('bokeh')
 pn.extension()
@@ -68,8 +69,6 @@ filters_val = {
 kwargs = {**filters_val}
 plot_snapshot = plot_umap(color_by=color_by_val, alpha=alpha_val, trigger=False, show_shape_legend=False, **kwargs)
 
-from bokeh.io import export_svgs
-import holoviews as hv
 
 # Convert HoloViews object to Bokeh
 bokeh_obj = hv.render(plot_snapshot)
