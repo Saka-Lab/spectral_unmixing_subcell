@@ -49,6 +49,7 @@ preprocess = "python ./subcell/preprocessing.py"
 subcell = "python ./subcell/subcell.py"
 
 [feature.subcell.dependencies]
+hdf5 = ">=1.14.6,<2"
 
 [environments]
 preprocess = { features = ["preprocess"], solve-group = "'torch-new'" }

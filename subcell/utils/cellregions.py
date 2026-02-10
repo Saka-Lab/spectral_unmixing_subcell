@@ -12,6 +12,7 @@ from tqdm import tqdm
 import einops
 from bioio import BioImage
 from skimage.measure._regionprops import RegionProperties
+from loguru import logger
 
 
 def load_img_data(img_path, axis_str):
@@ -127,7 +128,7 @@ class CellRegionDataset(Dataset):
 
         exp_dir = img_dir / experiment_name
         lab_dir = labels_dir / experiment_name
-        print(f"Loading images from {exp_dir} and labels from {lab_dir}...")
+        logger.info(f"Loading images from {exp_dir} and labels from {lab_dir}...")
 
         self.hdf5_path = Path(h5_dir) / f"{experiment_name}_cell_regions.h5"
         img_paths = sorted(exp_dir.iterdir())
@@ -141,31 +142,27 @@ class CellRegionDataset(Dataset):
         label_paths = sorted(lab_dir.iterdir())
 
         if len(label_paths) == 0:   # no manual segmentation
-            print("No manual segmentations were found, fall back on processed masks")
+            logger.info("No manual segmentations were found, fall back on processed masks")
             labels_dir = labels_dir.parent / labels_dir.name.replace("manual_", "")
             lab_dir = labels_dir / experiment_name
             label_paths = sorted(lab_dir.iterdir())
 
-
         img_paths = [im for im in img_paths if im.suffix.lower() in ('.tif', '.tiff', '.png', '.jpg')]
         label_paths = [im for im in label_paths if im.suffix.lower() in ('.tif', '.tiff', '.png', '.jpg')]
 
-        print(f"Found {len(img_paths)} images and {len(label_paths)} labels")
-
+        logger.info(f"Found {len(img_paths)} images and {len(label_paths)} labels")
 
         # check the correspondence between images and labels
         mismatch = False
         if len(img_paths) == len(label_paths):
             for i in range(len(img_paths)):
                 if not img_paths[i].name == label_paths[i].name:
-                    print("Mismatch between image and label names")
-                    print(f"Image: {img_paths[i].name}\nLabel: {label_paths[i].name}")
+                    logger.debug("Mismatch between image and label names")
+                    logger.debug(f"Image: {img_paths[i].name}\nLabel: {label_paths[i].name}")
                     mismatch = True
         else:
             mismatch = True
         if mismatch:
-            print("Please make sure that the images and labels have the same names")
-            print("Exiting...")
             raise ValueError("Mismatch between images and labels")
 
         imgs = [load_img_data(img_path, "CZYX") for img_path in img_paths]
@@ -175,8 +172,8 @@ class CellRegionDataset(Dataset):
         all_regionprops = []
         for img, label, img_path in zip(imgs, labels, img_paths):
             if img.shape[1:] != label.shape:
-                print(f"Something went wrong with the shapes skipping {img_path}")
-                print(f"img shape: {img.shape[1:]}\tlabel shape: {label.shape}")
+                logger.info(f"Something went wrong with the shapes skipping {img_path}")
+                logger.info(f"img shape: {img.shape[1:]}\tlabel shape: {label.shape}")
                 continue
             original_shape = img.shape
             regionprops = get_regionprops(img, label, "CZYX", "ZYX")
@@ -190,8 +187,7 @@ class CellRegionDataset(Dataset):
 
         # numer of sample in the dataset
         dataset_shape = (self.num_patches, *patch_size.tuple(), img.shape[0])    # nimages, patch, patch, z.stacks, channels
-        print(f"Shape: {dataset_shape}")
-
+        logger.info(f"Shape of dataset: {dataset_shape}")
 
         with h5py.File(self.hdf5_path, "w") as h5f:
             str_dtype = h5py.string_dtype(encoding='utf-8')
@@ -203,7 +199,7 @@ class CellRegionDataset(Dataset):
             cell_idx = 0
             last_cell_idx = -1
             for regionprops, img_path, tqdm_total, original_shape in all_regionprops:
-                print(f"Processing {img_path}...")
+                logger.info(f"Processing {img_path}...")
                 img_name = '.'.join(img_path.split('.')[0:-1])
                 for patch, local_cell_idx, centroid_coords, lab in tqdm(
                     self.img_generator(regionprops, patch_size, bg_masking), total=tqdm_total):
@@ -226,7 +222,7 @@ class CellRegionDataset(Dataset):
 
                     idx += 1
 
-        print(f"Saved {idx} samples to {self.hdf5_path}")
+        logger.info(f"Saved {idx} samples to {self.hdf5_path}")
 
         
     def img_generator(self, regionprops, patch_size, bg_masking):

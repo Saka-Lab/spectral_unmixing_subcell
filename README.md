@@ -131,8 +131,12 @@ the SubCell model. For more information see the `--help`:
 
 ![subcell_help](readme_images/subcell_help.png)
 
-For preprocessing the tensors, the image is first downsampled using the specified downsampling method. 
-Next a per channel normalization is applied (1st and 99th percentile)
+For preprocessing, first cells are extracted based on the mask and the centroids are determined through defining 
+regionprops. The centroids are then used to create cell patch images the size of which corresponds to 
+`--cell-patch-size` (these are stored in . Next by default, the individual cell images are sum projected after which a 
+per channel normalization is applied (1st and 99th percentile) with subsequent rescaling of values between 0 and 1. 
+If `--bg-masking` is supplied as argument, the background will be masked out from the individual cell images. However,
+this is not the default. Images are then fed to the SubCell model of choice. The final
 
 
 

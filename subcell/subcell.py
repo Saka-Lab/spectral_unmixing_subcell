@@ -7,12 +7,21 @@ from utils.subcell_utils import preprocess_tensor, Subcell
 from utils.preprocess_utils import get_experiments
 from enum import Enum
 from typing import Annotated
+from loguru import logger
+from datetime import datetime
+
+logger.add(f"logs/subcell/{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
 
 
 class DownsampleMethod(str, Enum):
     sum = 'sum'
     max = 'max'
     mean = 'mean'
+
+
+class ModelType(str, Enum):
+    mae_contrast_supcon_model = "mae_contrast_supcon_model"
+    vit_supcon_model = "vit_supcon_model"
 
 
 CHANNELS_15PLEX = [
@@ -91,6 +100,7 @@ def main(
             Path("data/subcell_prep"),
             "--tmp-dir",
             "-t",
+            help="Directory to store temporary files like the individual cell images.",
         ),
         output_dir: Path = typer.Option(
             Path("data/subcell_results"),
@@ -109,17 +119,18 @@ def main(
             "-bg",
             help="If given as argument, will apply background masking.",
             is_flag=True)] = False,
-        sc_model: str = typer.Option(
+        sc_model: ModelType = typer.Option(
             "mae_contrast_supcon_model",
+            "--model_type",
+            "-mt",
             help="Self-supervised model to use",
             show_choices=True
         ),
 ):
-    typer.echo("Running with args:")
+    logger.info("Running with args:")
     for k, v in locals().items():
-        typer.echo(f"\t{k}: {v}")
-    typer.echo("-" * 180)
-    typer.echo("")
+        logger.info(f"\t{k}: {v}")
+    logger.info("-" * 180)
 
     cell_patch_size = Spec3D(**json.loads(cell_patch_size))
     downsample_kernel = Spec3D(**json.loads(downsample_kernel))
@@ -156,7 +167,7 @@ def main(
             gpu=gpu,
         )
 
-        typer.echo(str(subcell))
+        logger.info(str(subcell))
         subcell.run_prep(bg_masking=bg_masking)
         subcell.run_subcell(
             bg_masking=bg_masking,

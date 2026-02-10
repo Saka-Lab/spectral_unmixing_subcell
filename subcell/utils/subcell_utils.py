@@ -11,13 +11,12 @@ import boto3
 from botocore import UNSIGNED
 from botocore.client import Config
 from botocore.exceptions import ClientError
-
+from loguru import logger
 from utils.vit_model import ViTPoolClassifier
 from skimage.io import imread
 import datetime
 import utils.inference as inference
 from tqdm import tqdm
-import logging
 
 from .cellregions import CellRegionDataset, Spec3D
 import einops
@@ -145,10 +144,10 @@ class Subcell:
         if path_list_file.is_file():
             df = pd.read_csv(path_list_file)
             if not df.empty:
-                print(f"Path list for {out_path} already exists, skipping Subcell preparation.")
+                logger.info(f"Path list for {out_path} already exists, skipping Subcell preparation.")
                 return
         else:
-            print(f"File {path_list_file} does not exist.")
+            logger.info(f"File {path_list_file} does not exist.")
 
         dataset = CellRegionDataset(
             img_dir=self.input_dir / "8bits" / f"{self.min_th}_{self.max_th}",
@@ -170,7 +169,7 @@ class Subcell:
         img_path = Path(out_path) / "imgs"
         img_path.mkdir(parents=True, exist_ok=True)
 
-        print("Processing dataset...")
+        logger.info("Processing dataset...")
         for idx, (img_name, lab, img) in tqdm(enumerate(dataset), total=len(dataset)):
             img = check_img_dims(img, dataset.patch_size)
             img = img / dataset.patch_size.z
@@ -197,7 +196,7 @@ class Subcell:
         dataset.h5f.close()
         df = pd.DataFrame(img_data)
         df.to_csv(path_list_file, index=False, header=False)
-        print(f"Saved path list to {path_list_file}")
+        logger.info(f"Saved path list to {path_list_file}")
 
         # clean up removing the 'cell_regions' key
         with h5py.File(dataset.hdf5_path, 'r+') as f:
@@ -208,7 +207,7 @@ class Subcell:
 
     def run_subcell(self, model_type, bg_masking):
 
-        print(f"Running Subcell on experiment: {self.name} - Model: {model_type} - Masking: {bg_masking}")
+        logger.info(f"Running Subcell on experiment: {self.name} - Model: {model_type} - Masking: {bg_masking}")
         paths_file = Path(self.prep_dir) / f"{self.min_th}_{self.max_th}" / self.name / f"path_list_{self.name}.csv"
         results_file = Path(
             self.res_dir) / f"{self.min_th}_{self.max_th}" / f"{self.name}{'_bgmask' if bg_masking else ''}_{model_type.split('_')[0]}.tsv"
@@ -222,30 +221,11 @@ class Subcell:
         # Check if logs folder exists, if not create it
         os.makedirs("logs", exist_ok=True)
 
-        logger = logging.getLogger(f"SubCell inference-{self.name}-{model_type}-{'bg_masking' if bg_masking else ''}")
-        logger.setLevel(logging.INFO)
-        logger.propagate = False  # Prevent duplicate logs via root logger
-
-        if not logger.handlers:
-            # File handler
-            file_handler = logging.FileHandler(
-                f"logs/{self.name}_{model_type}{'_bg_masking' if bg_masking else ''}_log.txt", encoding="utf-8",
-                mode="w")
-            file_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
-            logger.addHandler(file_handler)
-
-            # Console handler
-            console_handler = logging.StreamHandler()
-            console_handler.setLevel(logging.WARNING)
-            console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
-            logger.addHandler(console_handler)
+        logger.info(f"SubCell inference-{self.name}-{model_type}-{'bg_masking' if bg_masking else ''}")
 
         # This is the general configuration variable. We are going to use the special key "log" in the dictionary to use the log in our code
-        config = {"log": logger}
-        config["model_channels"] = self.model_channels
-        config["model_type"] = model_type
-        config["paths_file"] = paths_file
-        config["results_file"] = results_file
+        config = {"log": logger, "model_channels": self.model_channels, "model_type": model_type,
+                  "paths_file": paths_file, "results_file": results_file}
 
         # check if the results directory exists
         res_dir = os.path.dirname(config["results_file"])
@@ -253,19 +233,19 @@ class Subcell:
             os.makedirs(res_dir, exist_ok=True)
 
         # Log the start time and the final configuration so you can keep track of what you did
-        config["log"].info("Start: " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-        config["log"].info("Parameters used:")
-        config["log"].info(config)
-        config["log"].info("----------")
+        logger.info("Start: " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        logger.info("Parameters used:")
+        logger.info(config)
+        logger.info("----------")
 
         model, classifier_paths = get_model(config)
         model.eval()
 
         if torch.cuda.is_available() and self.gpu != -1:
             device = torch.device("cuda:" + str(self.gpu))
-            config["log"].warning(f"Using device {device}")
+            logger.warning(f"Using device {device}")
         else:
-            config["log"].warning("CUDA not available. Using CPU.")
+            logger.warning("CUDA not available. Using CPU.")
             device = torch.device("cpu")
         model.to(device)
 
@@ -287,12 +267,12 @@ class Subcell:
 
         # We iterate over each set of images to process
         if not os.path.exists(config["paths_file"]):
-            config["log"].error("The paths file does not exist: " + config["paths_file"])
+            logger.error("The paths file does not exist: " + config["paths_file"])
             raise FileNotFoundError(f"The paths file does not exist: {config['paths_file']}")
 
         with open(config["paths_file"]) as f:
             path_list = f.readlines()
-        print(f"Processing {config['paths_file']}, found {len(path_list)} sets of images.")
+        logger.info(f"Processing {config['paths_file']}, found {len(path_list)} sets of images.")
 
         # if the results file already exists, do not process it again
         if not os.path.exists(config["results_file"]):
@@ -345,13 +325,13 @@ class Subcell:
                     config["log"].info(log_message)
 
             df.to_csv(config['results_file'], index=False)
-            print(f"Results saved to {config['results_file']}")
-            self._process_results(df, config["log"], bg_masking, model_type, config['results_file'])
+            logger.info(f"Results saved to {config['results_file']}")
+            self._process_results(df, config["log"], config['results_file'])
 
-        config["log"].info("----------")
-        config["log"].info("End: " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        logger.info("----------")
+        logger.info("End")
 
-    def _process_results(self, df, log, bg_masking, model_type, results_file):
+    def _process_results(self, df, log, results_file):
 
         parsed_df = df['id'].apply(parse_id).apply(pd.Series)
         df = pd.concat([df, parsed_df], axis=1)
@@ -368,7 +348,6 @@ class Subcell:
 
         nan_counts = df.isna().sum()
         if nan_counts.sum() > 0:
-            print(f"Found NaNs in {file_name} for {prep}:")
             print(nan_counts[nan_counts > 0] / len(self.channels))
             # print the rows with NaNs
             nan_rows = df[df.isna().any(axis=1)]
@@ -401,7 +380,7 @@ def get_model(config):
 
     # Checking for model update
     if needs_update:
-        config["log"].info("- Downloading models...")
+        logger.info("- Downloading models...")
         with open("models_urls.yaml", "r") as urls_file:
             url_info = yaml.safe_load(urls_file)
             for index, curr_url_info in enumerate(url_info[config["model_channels"]][config["model_type"]]["classifiers"]):
@@ -527,12 +506,12 @@ def repack_h5_file(input_path, remove_original=True):
         raise RuntimeError("h5repack not found — install it first (e.g., via `apt install hdf5-tools`).")
 
     cmd = ['h5repack', str(input_path), str(output_path)]
-    print(f"Running: {' '.join(cmd)}")
+    logger.info(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print("h5repack error output:")
-        print(result.stderr)
+        logger.error("h5repack error output:")
+        logger.error(result.stderr)
         raise RuntimeError("h5repack failed")
 
     if remove_original:
