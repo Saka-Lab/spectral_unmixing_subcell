@@ -1,11 +1,4 @@
-import os
 from pathlib import Path
-from PIL import Image
-import base64
-from io import BytesIO
-from PIL import ImageEnhance
-from functools import lru_cache
-
 import umap
 import panel as pn
 import pandas as pd

@@ -171,7 +171,7 @@ def main(
         subcell.run_prep(bg_masking=bg_masking)
         subcell.run_subcell(
             bg_masking=bg_masking,
-            model_type=sc_model
+            model_type=sc_model.name
         )
 
 

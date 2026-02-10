@@ -48,12 +48,25 @@ preprocess = "python ./subcell/preprocessing.py"
 [feature.subcell.tasks]
 subcell = "python ./subcell/subcell.py"
 
+[feature.plotter.tasks]
+plot = "python ./subcell/hv_plot.py"
+
 [feature.subcell.dependencies]
 hdf5 = ">=1.14.6,<2"
 
+[feature.plotter.dependencies]
+umap-learn = ">=0.5.11,<0.6"
+
+[feature.plotter.pypi-dependencies]
+panel = ">=1.8.7, <2"
+holoviews = ">=1.22.1, <2"
+bokeh = ">=3.8.2, <4"
+selenium = ">=4.40.0, <5"
+
 [environments]
-preprocess = { features = ["preprocess"], solve-group = "'torch-new'" }
+preprocess = { features = ["preprocess"], solve-group = "torch-new" }
 subcell = { features = ["subcell"], solve-group = "torch-old" }
+plotter = { features = ["plotter"], solve-group = "torch-new" }
 
 [pypi-dependencies]
 bioio = "*"
