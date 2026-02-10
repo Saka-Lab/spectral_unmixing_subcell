@@ -21,7 +21,7 @@ def get_scene_name(image, img, scene, scene_index):
     return scene_name
 
 
-def split_lif(experiments, input_dir, output_dir, channels):
+def split_lif(experiments, input_dir, output_dir, channels, scene_filter):
     logger.info(f"Splitting image files of {len(experiments)} experiments.")
     for exp in experiments:
         logger.info(f'Splitting image file of experiment: {exp}')
@@ -45,6 +45,9 @@ def split_lif(experiments, input_dir, output_dir, channels):
 
             for index, scene in tqdm(enumerate(scenes), total=len(scenes)):
                 scene_name = get_scene_name(image, img, scene, index)
+                if scene_filter and scene_filter not in scene_name:
+                    logger.info(f"Skipping scene as it does not contain scene filter `{scene_filter}`: {scene_name}")
+                    continue
                 scene_file = out_dir / f'{scene_name}.tif'
 
                 img.set_scene(scene)
@@ -101,15 +104,20 @@ def main(
         "-c",
         help="List of channel names. Length should match with the number of channels in the images."
     ),
+    scene_filter: str = typer.Option(
+        "ST",
+        "--scene_filter",
+        "-sf",
+        help="String based on which to filter images in a lif file.",
+    ),
 ):
-    print(channels)
     input_dir = input_dir.resolve()
     output_dir = output_dir.resolve()
 
     if not experiments:
         experiments = [p.name for p in input_dir.iterdir() if p.is_dir()]
 
-    split_lif(experiments, input_dir, output_dir, channels)
+    split_lif(experiments, input_dir, output_dir, channels, scene_filter)
 
 
 if __name__ == "__main__":
