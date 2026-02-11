@@ -1,4 +1,4 @@
-*.png
+data/
 *.tiff
 *.tif
 *.lif

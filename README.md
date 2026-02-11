@@ -138,9 +138,7 @@ filtered to only include the segmentation channels (`DAPI`, `VIMENTIN`, `WGA`, `
 and converted to 8 bit. These images are used as input for segmentation, the output of which are stored in the 
 third directory called `segmentations`. The directory structure after running the preprocessing should look something
 like this:
-
 ![output_preprocess](readme_images/output_preprocess.png)
-
 It can be that segmentations have to be corrected afterward. SubCell is expecting close to perfect segmentations. When 
 stored using the same name as the automated segmentation image in a directory called `manual_segmentations` within the 
 directory choosen as output directory, segmentation will be skipped if automated segmentation is rerun (this is also
