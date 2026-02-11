@@ -52,7 +52,7 @@ This file can be used to customize the umap output. Different elements can be cu
 The raw image data should be stored in a directory called `data`, which is present in this project directory.
 In this directory, for running the workflow with default parameters, it is expected that there is a directory called 
 `raw`. This directory contains experiment directories with names of the user's choice, that should contain either
-`.lif` or `.tif`, `.tiff` images. The dimension names and order of these images is expected to be `czyx`. The images
+`.lif` images. The dimension names and order of these images is expected to be `czyx`. The images
 can contain one or multiple scenes (Fields of View).
 
 ## Getting started
