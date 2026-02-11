@@ -49,13 +49,16 @@ preprocess = "python ./subcell/preprocessing.py"
 subcell = "python ./subcell/subcell.py"
 
 [feature.plotter.tasks]
-plot = "python ./subcell/hv_plot.py"
+serve-umap= "python ./subcell/hv_plot.py serve"
+export-umap = "python ./subcell/hv_plot.py export"
 
 [feature.subcell.dependencies]
 hdf5 = ">=1.14.6,<2"
 
 [feature.plotter.dependencies]
 umap-learn = ">=0.5.11,<0.6"
+firefox = ">=147.0.3,<148"
+geckodriver = ">=0.36.0,<0.37"
 
 [feature.plotter.pypi-dependencies]
 panel = ">=1.8.7, <2"

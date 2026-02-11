@@ -304,9 +304,11 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/contourpy-1.3.3-py311h724c32c_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/dask-core-2026.1.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/dav1d-1.2.1-hd590300_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/firefox-147.0.3-h54a6638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/flexcache-0.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/flexparser-0.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fsspec-2026.1.0-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/geckodriver-0.36.0-hb7e49e0_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/giflib-5.2.2-hd590300_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h11-0.16.0-pyhcf101f3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h2-4.3.0-pyhcf101f3_0.conda
@@ -488,9 +490,11 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/contourpy-1.3.3-py311h7d85929_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/dask-core-2026.1.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/dav1d-1.2.1-hb547adb_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/firefox-147.0.3-h784d473_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/flexcache-0.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/flexparser-0.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fsspec-2026.1.0-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/geckodriver-0.36.0-h27be701_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/giflib-5.2.2-h93a5062_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h11-0.16.0-pyhcf101f3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h2-4.3.0-pyhcf101f3_0.conda
@@ -667,9 +671,11 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/contourpy-1.3.3-py311h275cad7_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/dask-core-2026.1.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/dav1d-1.2.1-hcfcfb64_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/firefox-147.0.3-h5112557_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/flexcache-0.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/flexparser-0.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fsspec-2026.1.0-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/geckodriver-0.36.0-h127b8e1_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/giflib-5.2.2-h64bf75a_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h11-0.16.0-pyhcf101f3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h2-4.3.0-pyhcf101f3_0.conda
@@ -4998,6 +5004,41 @@ packages:
   - pkg:pypi/filelock?source=hash-mapping
   size: 18661
   timestamp: 1768022315929
+- conda: https://conda.anaconda.org/conda-forge/linux-64/firefox-147.0.3-h54a6638_0.conda
+  sha256: 40c8e6fb00dfcd1b420005f52d0b3390056e0d27814367b8d95020cb4050d4ec
+  md5: 923c446cae4d235ac2c2a2e5cebeb507
+  depends:
+  - libstdcxx >=14
+  - libgcc >=14
+  - __glibc >=2.17,<3.0.a0
+  license: MPL-2.0
+  license_family: MOZILLA
+  purls: []
+  size: 98252728
+  timestamp: 1770150110951
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/firefox-147.0.3-h784d473_0.conda
+  sha256: a9f0ac62e214d2780bf37ddebd2d98eecc2141805e9683d88cc785d6e6b98808
+  md5: 015c5fbdbfe72ab37845c5811859a874
+  depends:
+  - libcxx >=19
+  - __osx >=11.0
+  license: MPL-2.0
+  license_family: MOZILLA
+  purls: []
+  size: 158487035
+  timestamp: 1770150194346
+- conda: https://conda.anaconda.org/conda-forge/win-64/firefox-147.0.3-h5112557_0.conda
+  sha256: 00405828dd94476af06f75e1dfe6de27198d3d5e40d0a1d8921fb5f5ed64dad3
+  md5: f375f4e6f4c842b01047adae6c187ed8
+  depends:
+  - vc >=14.3,<15
+  - vc14_runtime >=14.44.35208
+  - ucrt >=10.0.20348.0
+  license: MPL-2.0
+  license_family: MOZILLA
+  purls: []
+  size: 110846258
+  timestamp: 1770150116391
 - pypi: https://files.pythonhosted.org/packages/27/cd/c883e1a7c447479d6e13985565080e3fea88ab5a107c21684c813dba1875/flexcache-0.3-py3-none-any.whl
   name: flexcache
   version: '0.3'
@@ -5500,6 +5541,49 @@ packages:
   purls: []
   size: 572147
   timestamp: 1769891293
+- conda: https://conda.anaconda.org/conda-forge/linux-64/geckodriver-0.36.0-hb7e49e0_0.conda
+  sha256: 402dc19bb0c8306454315bcee7d0b1b3cf10579f483abcdd224edb69c817b2f5
+  md5: 026859bee03fc65993e1f818e7a4a524
+  depends:
+  - libgcc >=13
+  - libstdcxx >=13
+  - libgcc >=13
+  - __glibc >=2.17,<3.0.a0
+  constrains:
+  - __glibc >=2.17
+  license: MPL-2.0
+  license_family: MOZILLA
+  purls: []
+  size: 2098452
+  timestamp: 1740507388380
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/geckodriver-0.36.0-h27be701_0.conda
+  sha256: b2ec7adbc2fd478310121a3a5c677cd17299cb8764bf0a2c9c3429d7503e0258
+  md5: 8164a17000a53276cee66ea439738000
+  depends:
+  - libcxx >=18
+  - __osx >=11.0
+  constrains:
+  - __osx >=11.0
+  license: MPL-2.0
+  license_family: MOZILLA
+  purls: []
+  size: 2016505
+  timestamp: 1740507433572
+- conda: https://conda.anaconda.org/conda-forge/win-64/geckodriver-0.36.0-h127b8e1_0.conda
+  sha256: 77cefb41aaedf81399424c399f376bd195402244e80f13170866fb9dfe4a98d3
+  md5: 097f0ec824bd86919e4eba1261a8b8c5
+  depends:
+  - vc >=14.2,<15
+  - vc14_runtime >=14.29.30139
+  - ucrt >=10.0.20348.0
+  - vc >=14.2,<15
+  - vc14_runtime >=14.29.30139
+  - ucrt >=10.0.20348.0
+  license: MPL-2.0
+  license_family: MOZILLA
+  purls: []
+  size: 2029252
+  timestamp: 1740507385222
 - conda: https://conda.anaconda.org/conda-forge/noarch/genericache-0.5.2-pyhd8ed1ab_0.conda
   sha256: f19b43d0fae4c41b91232c19f5c5e9420dfa33867d924371df310ad30c4e8635
   md5: ad52885b339a3ad39a1c566ecf5d56c2
