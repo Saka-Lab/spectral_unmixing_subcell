@@ -112,7 +112,7 @@ def create_filter_controls(df, filter_cols, cfg, max_visible=15, per_item_px=17)
     return filters, filter_widgets
 
 
-def ensure_df_columns(df, df_path):
+def ensure_df_columns(df, df_path, annotation_folder=None):
     # check if there are nans
     if df.isnull().values.any():
         nan_rows = df[df.isnull().any(axis=1)]
@@ -142,6 +142,35 @@ def ensure_df_columns(df, df_path):
         save_path.parent.mkdir(exist_ok=True)
         print(f"Saving UMAP results to {save_path}")
         df.to_csv(save_path, index=False, sep='\t')
+
+    if annotation_folder is not None:
+        annotation_file = Path(annotation_folder) / Path(df_path).name
+        if annotation_file.exists():
+            print(f"Loading annotations from {annotation_file}")
+            df_annotations = pd.read_csv(annotation_file, sep='\t')
+            annotation_columns = df_annotations.columns
+            
+            # check whether unique_cell_id exist in both dataframes
+            if 'unique_cell_id' not in df_annotations.columns:
+                raise ValueError(f"Annotation file {annotation_file} must contain a 'unique_cell_id' column.")
+            if 'unique_cell_id' not in df.columns:
+                raise ValueError(f"Data file {df_path} must contain a 'unique_cell_id' column to merge with annotations.")
+            # check if there are common columns between df and df_annotations (except unique_cell_id), if so raise an error to avoid confusion after merge
+            common_cols = set(df.columns).intersection(set(df_annotations.columns)) - {'unique_cell_id'}
+            if common_cols:
+                raise ValueError(f"Data file {df_path} and annotation file {annotation_file} have common columns: {common_cols}. Please rename these columns to avoid confusion after merge.")
+            
+            df = df.merge(df_annotations, on='unique_cell_id', how='left', validate='many_to_one')
+            df_cols = df.columns
+            df_cols = [col for col in df_cols if 'feat' not in col]
+            for col in annotation_columns:
+                if df[col].isna().any():
+                    missing_ids = df.loc[df[col].isna(), "unique_cell_id"].unique()
+                    raise ValueError(
+                        f"Missing annotations for {len(missing_ids)} cells in column '{col}'."
+                        f" Example missing unique_cell_id: {missing_ids[:15]}")
+        else:
+            print(f"No annotation file found for {df_path} in {annotation_folder}. Skipping annotations.")
 
     return df
 
@@ -256,11 +285,11 @@ def build_too_many_entries_label(x0, y_start, text):
         show_legend=False
     )
 
-def create_tab(file_name, cfg):
+def create_tab(file_name, cfg, annotation_folder=None):
 
     df = pd.read_csv(file_name, low_memory=False, sep='\t')
 
-    df = ensure_df_columns(df, file_name)
+    df = ensure_df_columns(df, file_name, annotation_folder)
     
     print(f"Loaded {file_name} with {len(df)} rows")
     filter_cols = df.columns

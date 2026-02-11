@@ -32,7 +32,7 @@ def load_config():
     return SimpleNamespace(**config_data)
 
 
-def build_dashboard(umap_folder: str):
+def build_dashboard(umap_folder: str, annotation_folder: str = None):
     cfg = load_config()
 
     if not os.path.exists(umap_folder):
@@ -52,7 +52,7 @@ def build_dashboard(umap_folder: str):
 
     for i, file in enumerate(csv_files):
         typer.echo(f" - {file}")
-        layout, plot_umap = create_tab(file, cfg)
+        layout, plot_umap = create_tab(file, cfg, annotation_folder)
         tabs.append((file, layout))
 
     logger.info(f"Created {len(tabs)} tabs for the dashboard")
@@ -67,6 +67,12 @@ def serve(
             "-u",
             help="Path to folder containing UMAP CSV/TSV files"
         ),
+        annotation_folder: str = typer.Option(
+            "data/annotations",
+            "--annotation-folder",
+            "-a",
+            help="Path to folder containing annotation CSV files (optional)",
+        ),
         port: int = typer.Option(
             5006,
             "--port",
@@ -79,7 +85,7 @@ def serve(
             help="Automatically open browser"
         )
 ):
-    dashboard, _ = build_dashboard(umap_folder)
+    dashboard, _ = build_dashboard(umap_folder, annotation_folder)
     logger.info(f"Dashboard is now serving at port:{port}")
     pn.serve(dashboard, port=port, show=show, title="UMAP Dashboard")
 
@@ -93,6 +99,12 @@ def export(
             "-u",
             help="Path to folder containing UMAP CSV/TSV files"
         ),
+        annotation_folder: str = typer.Option(
+            "data/annotations",
+            "--annotation-folder",
+            "-a",
+            help="Path to folder containing annotation CSV files (optional)",
+        ),
         output_file: str = typer.Option(
             "data/snapshot.svg",
             "--output-file",
@@ -101,7 +113,7 @@ def export(
         )
 ):
     logger.info(f"Building dashboard from {umap_folder}...")
-    _, plot_umap = build_dashboard(umap_folder)
+    _, plot_umap = build_dashboard(umap_folder, annotation_folder)
 
     color_by_val = 'protein'
     alpha_val = 0.7
