@@ -108,8 +108,9 @@ This installs the dependencies for all environments related to this project.
 
 ### Overview of subcell workflow
 #### Splitting images into 1 scene per image file
-The workflow starts from either raw `.lif` or `.tif` / `tiff` images. These are split into individual channel
-images by running a CLI. To run with default parameters, in the command line ensure that you are in this repository directory and run: 
+The workflow starts from raw `.lif` images. These are split into individual FOV
+images by running a CLI. To run with default parameters, in the command line ensure that you are in this repository 
+directory and run: 
 
 `pixi run split_images`
 
@@ -140,7 +141,7 @@ like this:
 
 ![output_preprocess](readme_images/output_preprocess.png)
 
-It can be that segmentations have to be corrected afterwards. Subcell is expecting close to perfect segmentations. When 
+It can be that segmentations have to be corrected afterward. SubCell is expecting close to perfect segmentations. When 
 stored using the same name as the automated segmentation image in a directory called `manual_segmentations` within the 
 directory choosen as output directory, segmentation will be skipped if automated segmentation is rerun (this is also
 the case for any automated segmentations already existing).
@@ -167,29 +168,36 @@ regionprops. The centroids are then used to create cell patch images the size of
 `--cell-patch-size` (these are stored in . Next by default, the individual cell images are sum projected after which a 
 per channel normalization is applied (1st and 99th percentile) with subsequent rescaling of values between 0 and 1. 
 If `--bg-masking` is supplied as argument, the background will be masked out from the individual cell images. However,
-this is not the default. Images are then fed to the SubCell model of choice. The final
+this is not the default. Individual cell images are then fed to the SubCell model of choice for protein localization 
+classification. The final output is a `.tsv` file. For a more detailed description of this file, 
+please see [subcell output readme](subcell_output_readme.md)
 
+#### Visualization
 
+There are two modes by which to visualize the output of the SubCell classification, either interactive or static. 
+For default interactive visualization run the following:
 
+`pixi run serve-umap`
 
+This will open your web browser and display an interactive visualization (may take maximum half a minute to show as 
+all umaps are calculated for better interactivity):
 
-Raw images (LIF / TIFF)
-        ↓
-1. split_lif
-        ↓
-2. preprocessing
-        ↓
-3. subcell
-        ↓
-4. hv_plot
-        ↓
-Interactive dashboard (Panel) and/or SVG figures
+![interactive_umap](readme_images/interactive_umap.png)
 
+When done with visualizing the server needs to be killed. From the terminal in which you ran the command to serve, press
+`CTRL+c` in order to kill the server.
 
-- split_lif.py, split raw image files containing multiple scenes.
+Optionally, when starting the server, arguments can be provided to change the input directory and the port to serve the 
+dashboard on:
 
-- preprocessing, prepares to run subcell with preprocessing, segmenting, and mask post-processing.
+![serve_umap_help](readme_images/serve_umap_help.png)
 
-- subcell, prepares the dataset for subcell, and runs it.
+For creating the default static output as 'svg' file run:
 
-- hv_plot, creates an interactive plot and saves an svg file.
+`pixi run export-umap`
+
+For the default workflow this will create a static umap visualization as svg in the data directory. This is mostly 
+equivalent to the interactive umap except that the `svg` will not allow for filtering of the umap.
+Optionally, input directory and output file name can be adjusted:
+
+![export_umap_help](readme_images/export_umap_help.png)

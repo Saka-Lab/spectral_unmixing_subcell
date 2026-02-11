@@ -97,7 +97,7 @@ def export(
             "data/snapshot.svg",
             "--output-file",
             "-o",
-            help="Output filename for the exported SVG"
+            help="Output filename for the exported SVG (must include .svg at the end of the name)"
         )
 ):
     logger.info(f"Building dashboard from {umap_folder}...")
