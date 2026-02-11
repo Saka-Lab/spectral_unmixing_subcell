@@ -167,13 +167,27 @@ the SubCell model. For more information see the `--help`:
 
 ![subcell_help](readme_images/subcell_help.png)
 
-For preprocessing, first cells are extracted based on the mask and the centroids are determined through defining 
-regionprops. The centroids are then used to create cell patch images the size of which corresponds to 
-`--cell-patch-size` (these are stored in . Next by default, the individual cell images are sum projected after which a 
-per channel normalization is applied (1st and 99th percentile) with subsequent rescaling of values between 0 and 1. 
-If `--bg-masking` is supplied as argument, the background will be masked out from the individual cell images. However,
-this is not the default. Individual cell images are then fed to the SubCell model of choice for protein localization 
-classification. The final output is a `.tsv` file. For a more detailed description of this file, 
+For preprocessing, first cells are extracted based on the mask and the centroids are determined through defining regionprops.
+The centroids are then used to create cell patch images the size of which corresponds to `--cell-patch-size` (these are stored in ). Next by default, the individual cell images are sum projected after which a per channel normalization is applied (1st and 99th percentile) with subsequent rescaling of values between 0 and 1. 
+If `--bg-masking` is supplied as argument, the background will be masked out from the individual cell images.
+However, this is not the default.
+Individual cell images are then fed to the SubCell model of choice for protein localization classification.
+
+SubCell is a suite of multiple models that were trained with different reference channels and different objectives.
+In this work we used two reference channels (alpha-tubulin and DAPI) and the third channel was the protein of interest (each of the 15 acquired in the panel).
+This setting corresponds to the argument `--model-channels rbg`.
+The other possible combinations (as can be seen in the models/ directory) are:
+- `--model-channels bg`, which uses DAPI and protein of interest;
+- `--model-channels rybg`, which uses alpha-tubulin, endoplasmic reticulum, DAPI, and protein of interest;
+- `--model-channels ybg`, which uses endoplasmic reticulum, DAPI, and protein of interest.
+Subcell models were trained with different objectives:
+- Reconstructive Objective;
+- Cell-specific Objective;
+- Protein-specific Objective.
+The models with the best performances are the one trained with only the Protein-specific objective, and the one trained with the combination of all three objectives. The model used can be changed with the argument `--model-type` which can be respectively vit_supcon_model or mae_contrast_supcon_model.
+
+
+The final output is a `.tsv` file. For a more detailed description of this file, 
 please see [subcell output readme](subcell_output_readme.md)
 
 #### UMAP Visualization
@@ -205,3 +219,40 @@ equivalent to the interactive umap except that the `svg` will not allow for filt
 Optionally, input directory and output file name can be adjusted:
 
 ![export_umap_help](readme_images/export_umap_help.png)
+
+### Reproducing figures
+#### Figure 5c (SVG)
+The hv_plot.py file should contain:
+```
+color_by_val = 'protein'
+filters_val = {
+    "CellCycle": ["Interphase"],
+}
+```
+The umap_config.yaml should have all proteins set to use the circle marker.
+
+#### Figure 5d (SVG)
+The hv_plot.py file should contain:
+```
+color_by_val = 'condition'
+filters_val = {
+    "CellCycle": ["Interphase"],
+    "protein": ['G3BP1', 'alphaTUBULIN', 'NPM1'],
+}
+```
+```
+protein:
+    alpha-tubulin: diamond
+    NPM1: square
+```
+The umap_config.yaml should have alpha-tubulin set to diamond and NPM1 set to square.
+
+#### Supplementary figure 5 (SVG)
+The hv_plot.py file should contain:
+```
+color_by_val = 'condition'
+filters_val = {
+    "CellCycle": ["Interphase"],
+}
+```
+The umap_config.yaml should have all proteins set to use the circle marker.
