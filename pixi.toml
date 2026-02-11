@@ -46,11 +46,12 @@ split-images = "python ./subcell/split_lif.py"
 preprocess = "python ./subcell/preprocessing.py"
 
 [feature.subcell.tasks]
-subcell = "python ./subcell/subcell.py"
+subcell = "python ./subcell/run_subcell.py"
 
 [feature.plotter.tasks]
 serve-umap= "python ./subcell/hv_plot.py serve"
 export-umap = "python ./subcell/hv_plot.py export"
+export-boxplot = "python ./subcell/box_plot2.py"
 
 [feature.subcell.dependencies]
 hdf5 = ">=1.14.6,<2"
@@ -59,6 +60,8 @@ hdf5 = ">=1.14.6,<2"
 umap-learn = ">=0.5.11,<0.6"
 firefox = ">=147.0.3,<148"
 geckodriver = ">=0.36.0,<0.37"
+seaborn = ">=0.13.2,<0.14"
+matplotlib = ">=3.10.8,<4"
 
 [feature.plotter.pypi-dependencies]
 panel = ">=1.8.7, <2"
