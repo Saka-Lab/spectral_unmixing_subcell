@@ -6,7 +6,7 @@ This dataset contains the results of subcellular localization classification for
 
 ## File Format
 
-- **Format**: CSV (Comma-Separated Values)
+- **Format**: TSV (Tab-Separated Values)
 - **Structure**: One row per cell
 - **Columns**: 79 columns total
 

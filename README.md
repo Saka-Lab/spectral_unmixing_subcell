@@ -7,6 +7,8 @@ but can be adjusted to your own data.
 For more information about SubCell, see the [SubCell paper](https://www.biorxiv.org/content/10.1101/2024.12.06.627299v2).
 
 ## Expected directory structure and naming
+<details>
+<summary>Click to expand and see more information about configuration and data directories.</summary>
 
 ### Configs
 First there should be a `configs` directory. This directory contains configurations for the interactive visualization with bokeh:
@@ -54,6 +56,8 @@ In this directory, for running the workflow with default parameters, it is expec
 `raw`. This directory contains experiment directories with names of the user's choice, that should contain either
 `.lif` images. The dimension names and order of these images is expected to be `czyx`. The images
 can contain one or multiple scenes (Fields of View).
+
+</details>
 
 ## Getting started
 
@@ -172,7 +176,7 @@ this is not the default. Individual cell images are then fed to the SubCell mode
 classification. The final output is a `.tsv` file. For a more detailed description of this file, 
 please see [subcell output readme](subcell_output_readme.md)
 
-#### Visualization
+#### UMAP Visualization
 
 There are two modes by which to visualize the output of the SubCell classification, either interactive or static. 
 For default interactive visualization run the following:
