@@ -1,5 +1,5 @@
 import numpy as np
-import tifffile
+from bioio import BioImage
 import pandas as pd
 from scipy import stats
 from scipy.ndimage import gaussian_filter
@@ -24,12 +24,12 @@ def extract_group_from_path(file_path: str) -> str:
     stem = Path(file_path).stem  # remove .tif
     return stem.split("_")[-1]
 
+
 def load_tif_image(file_path):
     """ Load a TIFF image stack and return it as a NumPy array. """
-    with tifffile.TiffFile(file_path) as tif:
-        # Load the entire stack (assuming Z-stack where each slice is a channel)
-        image = tif.asarray()
-    return image
+    reader = BioImage(file_path)
+    return reader.get_image_data("CYX"), reader.channel_names
+
 
 def check_image_shape(image):
     """ Print the shape of the loaded image to debug the structure. """
@@ -84,16 +84,14 @@ def create_pcc_dataframe(
 
     return df
 
+
 def pcc_from_tifs(
     image1_path: str,
     image2_path: str,
-    channel_names: list[str],
-    group1,
-    group2
 ):
-    # Load images
-    image1 = load_tif_image(image1_path)
-    image2 = load_tif_image(image2_path)
+    # Load images, we assume always the same channel names
+    image1, channel_names = load_tif_image(image1_path)
+    image2, _ = load_tif_image(image2_path)
 
     # Extract group names from filenames
     group1 = extract_group_from_path(image1_path)
@@ -125,9 +123,9 @@ def pcc_from_tifs(
 
     return pcc_df
 
+
 def compute_all_pcc_for_single_fov(
     fov_dir,
-    channel_names,
     output_subdir="pcc",
     comparison_rules=PCC_COMPARISONS
 ):
@@ -164,9 +162,6 @@ def compute_all_pcc_for_single_fov(
             pcc_df = pcc_from_tifs(
                 image1_path=group_to_path[group1],
                 image2_path=group_to_path[group2],
-                channel_names=channel_names,
-                group1=group1,
-                group2=group2
             )
 
             output_name = (

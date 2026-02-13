@@ -12,18 +12,14 @@ from similarity_to_self import similarity_to_self_all_matrices
 from aggregate_similarity import aggregate_and_normalize_similarity_to_self
 from utils_average_matrices import average_matrices_across_fovs
 from plot_heatmaps import plot_avg_heatmaps
+from loguru import logger
+import typer
+
+app = typer.Typer(help="Create pearson correlation heatmaps")
 
 # ----------------------------------
 # CONFIGURATION
 # ----------------------------------
-DATA_ROOT = Path("/Users/kristinajevdokimenko/Desktop/psnr_ssim/ground-truth-analysis/data")
-
-CHANNEL_NAMES = [
-    "DAPI", "ALEXA 594", "ATTO 425", "ATTO 633", "CF770",
-    "ATTO 488", "ATTO 490LS", "Oregon Green 514", "ALEXA 532",
-    "ALEXA 647", "ATTO 550", "TYE 705", "Atto Rho11", "ALEXA 750"
-]
-
 DESIRED_COLUMN_ORDER = [
     'DAPI - Gr1', 'ALEXA 594 - Gr2', 'ATTO 425 - Gr1',
     'ATTO 633 - Gr3', 'CF770 - Gr3', 'ATTO 488 - Gr1',
@@ -47,12 +43,11 @@ REFERENCES = ["raw", "group", "full"]
 # ----------------------------------
 def run_pipeline_for_single_fov(fov_dir: Path):
 
-    print(f"\n=== Processing {fov_dir.name} ===")
+    logger.info(f"\n=== Processing {fov_dir.name} ===")
 
     # Step 1: PCC
     compute_all_pcc_for_single_fov(
         fov_dir=fov_dir,
-        channel_names=CHANNEL_NAMES
     )
 
     pcc_dir = fov_dir / "pcc"
@@ -99,12 +94,14 @@ def run_pipeline_for_single_fov(fov_dir: Path):
         subtracted_dir=fov_dir / "subtracted"
     )
 
-def run_pipeline_for_all_fovs():
 
-    fov_dirs = sorted(
-        d for d in DATA_ROOT.iterdir()
-        if d.is_dir() and d.name.startswith("FOV")
-    )
+def run_pipeline_for_all_fovs(input_dir: Path, experiments: list[str]):
+
+    fov_dirs = [input_dir / exp for exp in experiments]
+    for index, fov_dir in enumerate(fov_dirs):
+        if not fov_dir.exists():
+            logger.debug(f"No directory for experiment {experiments[index]}, {fov_dir} does not exist. Skipping.")
+            fov_dirs.pop(index)
 
     if not fov_dirs:
         raise RuntimeError("No FOV directories found")
@@ -114,33 +111,31 @@ def run_pipeline_for_all_fovs():
 
     # Step 9: Aggregate and normalize row sums across all FOVs
     aggregate_and_normalize_row_sums(
-        data_root=DATA_ROOT,
+        data_root=input_dir,
         row_sums_subdir="row_sums",
         output_subdir="aggregated_normalized"
     )
 
     # Step 10: Visualize normalized row sums
     plot_row_sums_boxplot_with_stats(
-        normalized_long_csv=DATA_ROOT / "aggregated_normalized" / "all_fovs_row_sums_normalized_long.csv",
+        normalized_long_csv=input_dir / "aggregated_normalized" / "all_fovs_row_sums_normalized_long.csv",
         title="Normalized Row Sums per Channel",
         output_name="row_sums_boxplot.svg"
     )
 
     # Step 11: Aggregate & normalize similarity-to-self across all FOVs
     aggregate_and_normalize_similarity_to_self(
-        data_root=DATA_ROOT,
+        data_root=input_dir,
         similarity_subdir="subtracted_similarity",
         output_subdir="aggregated_similarity"
     )
 
     # Step 12: Visualize similarity-to-self
     plot_row_sums_boxplot_with_stats(
-    normalized_long_csv=DATA_ROOT / "aggregated_similarity" / "all_fovs_similarity_to_self_normalized_long.csv",
+    normalized_long_csv=input_dir / "aggregated_similarity" / "all_fovs_similarity_to_self_normalized_long.csv",
     title="Similarity to Self (1 - PCC) per Channel",
     output_name="similarity_to_self_boxplot.svg"
     )
-
-    fov_dirs = sorted(d for d in DATA_ROOT.iterdir() if d.is_dir() and d.name.startswith("FOV"))
 
     # Step 13: Average DAPI_normalized matrices
     avg_normalized = average_matrices_across_fovs(
@@ -150,7 +145,7 @@ def run_pipeline_for_all_fovs():
         filename_regex=r'^FOV\d+_(GT_vs_GT|raw_vs_GT|group_vs_GT|full_vs_GT)_DAPI_normalized\.csv$',
         channel_order=DESIRED_CHANNEL_ORDER
     )
-    plot_avg_heatmaps(avg_normalized, output_dir=DATA_ROOT / "plots" / "avg_DAPI_normalized")
+    plot_avg_heatmaps(avg_normalized, output_dir=input_dir / "plots" / "avg_DAPI_normalized")
 
     # Step 14: Average subtracted matrices
     avg_subtracted = average_matrices_across_fovs(
@@ -160,8 +155,26 @@ def run_pipeline_for_all_fovs():
         filename_regex=r'^FOV\d+_(raw_minus_GT|group_minus_GT|full_minus_GT)_abs\.csv$',
         channel_order=DESIRED_CHANNEL_ORDER
     )
-    plot_avg_heatmaps(avg_subtracted, output_dir=DATA_ROOT / "plots" / "avg_subtracted")
+    plot_avg_heatmaps(avg_subtracted, output_dir=input_dir / "plots" / "avg_subtracted")
+
+
+@app.command()
+def main(
+    input_dir: Path = typer.Option(
+        Path("unmixing_performance_data"),
+        "--input-dir",
+        "-i",
+        help="Path to the input directory containing experiments. (default: data/raw)"
+    ),
+    experiments: list[str] = typer.Option(
+        ["FOV1", "FOV2", "FOV3"],
+        "--experiments",
+        "-e",
+        help="Experiment names to process. These must be directory names within `input-dir` and contain ome-tif images with .tif extension."
+    ),
+):
+    run_pipeline_for_all_fovs(input_dir, experiments)
 
 
 if __name__ == "__main__":
-    run_pipeline_for_all_fovs()
+    app()

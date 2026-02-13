@@ -6,60 +6,9 @@ but can be adjusted to your own data.
 
 For more information about SubCell, see the [SubCell paper](https://www.biorxiv.org/content/10.1101/2024.12.06.627299v2).
 
-## Expected directory structure and naming
-<details>
-<summary>Click to expand and see more information about configuration and data directories.</summary>
-
-### Configs
-First there should be a `configs` directory. This directory contains configurations for the interactive visualization with bokeh:
-        
-#### colormaps.json
-This file defines how elements are colored in the umap and in the boxplots.
-By default elements are colored with Category10 colormap.
-This file can be added for customizations.
-The file needs to be structured as json, each top-level key corresponds to the column in the data (condition, cell_cycle_phase, image_name, ...), its corresponding value needs to be a dictionary that maps each element to a color.
-Here is an example in which for cell_id the colormap used is Turbo, while for the condition custom colors are defined.
-```
-{
-    "cell_id": "Turbo",
-    "condition": {
-        "Untreated": "#d81b60",
-        "SA": "#1e88e5",
-        "ActD": "#ffc107",
-        "Unknown": "#7f7f7f"
-    },
-}
-```
-
-#### constants.yaml
-This file contains:
-- the list of the 30 subcell classes,
-- the mapping used to condense them into 15 classes (e.g. Nucleoli was redefined as Nucleoli + Nucleoli fibrillar center + Nucleoli rim),
-- the list of 15 channel names.
-
-#### umap_config.yaml
-This file can be used to customize the umap output. Different elements can be customized:
-
-- The minimum width of the side panels can be defined.
-- The initial transparence of the points.
-- The maximum number of elements shown in the legend can be customized, this is particularly useful when coloring by cell_id, where the number of unique values if very large but the representation is useful to see whether all markers for a cell cluster together. ```The tooltip can be then used to extract the cell_id if needed. ```
-
-- A list of cells to be highlighted, along with the color and width of the border around the highlighted cell can be customized.
-
-- The marker shapes, first a list of markers can be defined along with their sizes, then the column for which the shapes will be changed can be selected, and finally for each element of the column a partiular marker can be defined.
-
-- tooltip elements can be chosen. Each element requires two values: 'column' which is the name of the column in the dataframe, and 'label' which is what will be shown in the tooltip.
-
-### Image Data
-The raw image data should be stored in a directory called `data`, which is present in this project directory.
-In this directory, for running the workflow with default parameters, it is expected that there is a directory called 
-`raw`. This directory contains experiment directories with names of the user's choice, that should contain either
-`.lif` images. The dimension names and order of these images is expected to be `czyx`. The images
-can contain one or multiple scenes (Fields of View).
-
-</details>
-
 ## Getting started
+<details>
+<summary>Click to expand and see more information about how to set up the pixi environments.</summary>
 
 ### Installing Pixi
 
@@ -107,11 +56,72 @@ pixi install -a
 ```
 
 This installs the dependencies for all environments related to this project.
+</details>
 
-## Running the workflow
+## Expected directory structure and naming
+<details>
+<summary>Click to expand and see more information about configuration and data directories.</summary>
+
+### Configs
+First there should be a `configs` directory. This directory contains configurations for the interactive visualization with bokeh:
+        
+#### colormaps.json
+This file defines how elements are colored in the umap and in the boxplots.
+By default elements are colored with Category10 colormap.
+This file can be added for customizations.
+The file needs to be structured as json, each top-level key corresponds to the column in the data (condition, cell_cycle_phase, image_name, ...), its corresponding value needs to be a dictionary that maps each element to a color.
+Here is an example in which for cell_id the colormap used is Turbo, while for the condition custom colors are defined.
+```
+{
+    "cell_id": "Turbo",
+    "condition": {
+        "Untreated": "#d81b60",
+        "SA": "#1e88e5",
+        "ActD": "#ffc107",
+        "Unknown": "#7f7f7f"
+    },
+}
+```
+
+#### constants.yaml
+This file contains:
+- the list of the 30 subcell classes,
+- the mapping used to condense them into 15 classes (e.g. Nucleoli was redefined as Nucleoli + Nucleoli fibrillar center + Nucleoli rim),
+- the list of 15 channel names.
+
+#### umap_config.yaml
+This file can be used to customize the umap output. Different elements can be customized:
+
+- The minimum width of the side panels can be defined.
+- The initial transparence of the points.
+- The maximum number of elements shown in the legend can be customized, this is particularly useful when coloring by cell_id, where the number of unique values if very large but the representation is useful to see whether all markers for a cell cluster together. ```The tooltip can be then used to extract the cell_id if needed. ```
+
+- A list of cells to be highlighted, along with the color and width of the border around the highlighted cell can be customized.
+
+- The marker shapes, first a list of markers can be defined along with their sizes, then the column for which the shapes will be changed can be selected, and finally for each element of the column a partiular marker can be defined.
+
+- tooltip elements can be chosen. Each element requires two values: 'column' which is the name of the column in the dataframe, and 'label' which is what will be shown in the tooltip.
+
+### Subcell Image Data
+The raw image data should be stored in a directory called `subcell_data`, which is present in this project directory.
+In this directory, for running the workflow with default parameters, it is expected that there is a directory called 
+`raw`. This directory contains experiment directories with names of the user's choice, that should contain either
+`.lif` images. The dimension names and order of these images is expected to be `czyx`. The images
+can contain one or multiple scenes (Fields of View).
+
+### Unmixing performance data
+By default, the data used for determining unmixing performance must be in a directory `unmixing_performance_data` in 
+this repository. This directory must contain directories with the names of the individual experiments / Fields of View,
+which contain `ome-tif` images with the `.tif` extension.
+</details>
+
+## Running the workflows
 
 ### Overview of subcell workflow
-#### Splitting images into 1 scene per image file
+<details>
+<summary>Click to expand and see more information about how to reproduce the SubCell workflow from the paper.</summary>
+
+#### 1. Splitting images into 1 scene per image file
 The workflow starts from raw `.lif` images. These are split into individual FOV
 images by running a CLI. To run with default parameters, in the command line ensure that you are in this repository 
 directory and run: 
@@ -124,7 +134,7 @@ Additional parameters can be provided:
 Both `experiments` and `channels` can be a list of strings. The way to provide multiple channels for example is:
 `pixi run split_images -c ch1 -c ch2 -c ch3`
 
-#### Preprocessing of images
+#### 2. Preprocessing of images
 The code for preprocessing of the images includes a percentile normalization step as well segmentation
 using micro-sam (paper [here](https://www.nature.com/articles/s41592-024-02580-4)). Due to naming,
 the code is specific to the data used in the paper. To run it, run the following in a terminal with this
@@ -156,7 +166,7 @@ small segmentation objects and border cells). This is because micro-sam does sto
 first with the `bioio-ome-tif` reader, before falling back to the basic `tif` reader. This message can be ignored.
 </details>
 
-#### Running subcell
+#### 3. Running subcell
 To run SubCell with the default configuration, just run the following from the terminal:
 
 `pixi run subcell`
@@ -203,8 +213,7 @@ Any annotation column present in the merged dataframe can be:
 
 The merged dataset enables filtering by cell cycle phase and other user-defined annotations in downstream visualizations.
 
-
-#### UMAP Visualization
+#### 4. UMAP Visualization
 
 There are two modes by which to visualize the output of the SubCell classification, either interactive or static. 
 For default interactive visualization run the following:
@@ -234,7 +243,7 @@ Optionally, input directory and output file name can be adjusted:
 
 ![export_umap_help](readme_images/export_umap_help.png)
 
-### Reproducing figures
+### 5. Reproducing figures
 #### Figure 5c (SVG)
 The hv_plot.py file should contain:
 ```
@@ -270,3 +279,55 @@ filters_val = {
 }
 ```
 The umap_config.yaml should have all proteins set to use the circle marker.
+
+</details>
+
+### Overview of workflow determining performance of unmixing using pearson correlation
+<details>
+<summary>Click to expand and see more information about how to reproduce the heatmap figures used to assess unmixing performance.</summary>
+
+#### Scripts
+The scripts are present in the `unmixing_performance` directory. `run.py` is the entry point. To run the command line 
+interface, simply type the following in the terminal with this directory as the location:
+
+`pixi run correlation-analysis`
+
+This will run the following steps:
+
+Steps 1 to 8 run for each FOV, while steps 9 to 14 work with output data from all FOVs.
+
+- Step 1: `pcc.py` calculates Pearson's correlation coefficient (PCC) for every channel comparison in every FOV.
+    - For Supplementary Fig. 2 `structural_similarity` (SSIM) from `skimage.metrics` was used instead of PCC. The final analysis doesn't include SSIM, therefore it's not included in this pipeline.
+- Step 2: `organize.py` organizes PCC matrices according to group assignment.
+- Step 3: `divisor.py` extracts DAPI value for later normalization to account for possible drift during image acquisition.
+- Step 4: `DAPI_normalizer.py` normalizes organized PCC matrices by divisors accordingly.
+- Step 5: `NegToZero.py` converts negative values to 0.
+- Step 6: `subtract_matrices.py` calculates absolute result of |raw vs. GT - GT vs. GT|, |group vs. GT - GT vs. GT| and |full vs. GT - GT vs. GT| matrices.
+- Step 7: `row_sum.py` calculates row sum for subtracted matrices.
+- Step 8: `similarity_to_self.py` extracts PCC values from subtracted matrices for the same channel (diagonal values).
+- Step 9: `aggregate_row_sums.py` sums the PCC values in every row for each channel from subtracted matrices, normalizes by 14 and scales values to maximum across all FOVs and all comparisons (residual crosstalk).
+- Step 10: `plot_row_sums.py` plots residual crosstalk.
+- Step 11: `aggregate_similarity.py` uses output from `similarity_to_self.py` to calculate similarity to self and scales values to maximum across all FOVs and all comparisons (similarity to self).
+- Step 12: `similarity_to_self.py` plots similarity to self.
+- Step 13: `utils_average_matrices.py` uses DAPI-normalized matrices as input (Step 4) to calculate an average matrix and `plot_heatmaps.py` to plot it.
+- Step 14: `utils_average_matrices.py` using subtracted matrices as input (Step 6) to calculate an average matrix and `plot_heatmaps.py` to plot it.
+
+#### Output
+When `run.py` script successfully finishes, the following outputs will be produced:
+- In each FOV folder:
+    - folder `pcc` containing output from `pcc.py`.
+    - folder `gt_matrices` containing output from `organize.py`.
+    - folder `DAPI_normalized` containing output from `DAPI_normalizer.py`.
+    - folder `neg_to_zero` containing output from `NegToZero.py`.
+    - folder `subtracted` containing output from `subtract_matrices.py`.
+    - folder `row_sums` containing output from `row_sum.py`.
+    - folder `subtracted_similarity` containing output from `similarity_to_self.py`.
+- Inside `data` folder:
+    - folder `aggregated_normalized` containing output from `aggregate_row_sums.py`
+        - `plots` folder containg residual crosstalk plot (corresponding to <b>Fig. 3d</b>)
+    - folder `aggregated_similarity` containing output from `aggregate_similarity.py`
+        - `plots` folder containg similarity to self plot (corresponding to <b>Fig. 3c</b>)
+    - folder `plots` containing:
+        - folder `avg_DAPI_normalized` containing output from `utils_average_matrices.py` and `plot_heatmaps.py` using DAPI-normalized matrices (corresponding to <b>Supplementary Fig. 4a and b</b>)
+        - folder `avg_subtracted` containing output from `utils_average_matrices.py` and `plot_heatmaps.py` using subtracted matrices (corresponding to <b>Fig. 3b</b> and <b>Supplementary Fig. 4c</b>)
+</details>

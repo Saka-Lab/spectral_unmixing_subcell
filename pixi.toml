@@ -52,6 +52,7 @@ subcell = "python ./subcell/run_subcell.py"
 serve-umap= "python ./subcell/hv_plot.py serve"
 export-umap = "python ./subcell/hv_plot.py export"
 export-boxplot = "python ./subcell/box_plot2.py"
+correlation-analysis = "python ./unmixing_performance/run.py"
 
 [feature.subcell.dependencies]
 hdf5 = ">=1.14.6,<2"
