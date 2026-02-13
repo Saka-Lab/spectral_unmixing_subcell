@@ -76,7 +76,7 @@ def split_lif(experiments, input_dir, output_dir, channels, scene_filter):
 @app.command()
 def main(
     input_dir: Path = typer.Option(
-        Path("data/raw"),
+        Path("subcell_data/raw"),
         "--input-dir",
         "-i",
         help="Path to the input directory containing experiments. (default: data/raw)"
@@ -88,7 +88,7 @@ def main(
         help="Experiment name to process (default: all subdirectories)."
     ),
     output_dir: Path = typer.Option(
-        Path("data/experiments"),
+        Path("subcell_data/experiments"),
         "--output-dir",
         "-o",
         help="Path to the output directory where resulting images are stored. (default: data/experiments)",

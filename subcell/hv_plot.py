@@ -94,19 +94,19 @@ def serve(
 @app.command()
 def export(
         umap_folder: str = typer.Option(
-            "data/subcell_results/10.0_99.99",
+            "subcell_data/subcell_results/10.0_99.99",
             "--umap-folder",
             "-u",
             help="Path to folder containing UMAP CSV/TSV files"
         ),
         annotation_folder: str = typer.Option(
-            "data/annotations",
+            "subcell_data/annotations",
             "--annotation-folder",
             "-a",
             help="Path to folder containing annotation CSV files (optional)",
         ),
         output_file: str = typer.Option(
-            "data/snapshot.svg",
+            "subcell_data/snapshot.svg",
             "--output-file",
             "-o",
             help="Output filename for the exported SVG (must include .svg at the end of the name)"
