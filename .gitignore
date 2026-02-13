@@ -1,4 +1,5 @@
-data/
+subcell_data/
+unmixing_performance_data/
 *.tiff
 *.tif
 *.lif
