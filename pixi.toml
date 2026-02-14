@@ -51,7 +51,7 @@ subcell = "python ./subcell/run_subcell.py"
 [feature.plotter.tasks]
 serve-umap= "python ./subcell/hv_plot.py serve"
 export-umap = "python ./subcell/hv_plot.py export"
-export-boxplot = "python ./subcell/box_plot2.py"
+export-boxplot = "python ./subcell/box_plot.py"
 correlation-analysis = "python ./unmixing_performance/run.py"
 
 [feature.subcell.dependencies]
