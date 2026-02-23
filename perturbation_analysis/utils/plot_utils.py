@@ -2,7 +2,8 @@ from pathlib import Path
 import umap
 import panel as pn
 import pandas as pd
-
+from collections import OrderedDict
+from loguru import logger
 import holoviews as hv
 from holoviews.streams import RangeXY, Tap
 from bokeh.models import HoverTool
@@ -112,18 +113,19 @@ def create_filter_controls(df, filter_cols, cfg, max_visible=15, per_item_px=17)
     return filters, filter_widgets
 
 
-def ensure_df_columns(df, df_path, annotation_folder=None):
+def ensure_df_columns(df, df_path, annotation_folder=None, tsv_dir=None):
+
     # check if there are nans
     if df.isnull().values.any():
         nan_rows = df[df.isnull().any(axis=1)]
-        print(nan_rows)
+        logger.debug(nan_rows)
         raise ValueError(f"DataFrame {df_path} contains NaN values. Please check the input data.")
 
     if f'UMAP1' not in df.columns:
         if f'UMAP1' in df.columns:
             df = df.drop(columns=[f'UMAP1', f'UMAP2'])
         
-        print(f"Calculating UMAP")
+        logger.info(f"Calculating UMAP")
         embeddings = df[[col for col in df.columns if col.startswith("feat")]].to_numpy()
         umap_model = umap.UMAP(n_neighbors=20, metric="cosine", min_dist=0.5, random_state=42)
         umap_embeddings = umap_model.fit_transform(embeddings)
@@ -137,16 +139,16 @@ def ensure_df_columns(df, df_path, annotation_folder=None):
 
         # remove extension from file name
         exp_name = Path(df_path).name
-        save_path = Path('umaps') / exp_name
+        save_path = tsv_dir / exp_name
         # check if the directory exists, if not create it
         save_path.parent.mkdir(exist_ok=True)
-        print(f"Saving UMAP results to {save_path}")
+        logger.info(f"Saving UMAP results to {save_path}")
         df.to_csv(save_path, index=False, sep='\t')
 
     if annotation_folder is not None:
         annotation_file = Path(annotation_folder) / Path(df_path).name
         if annotation_file.exists():
-            print(f"Loading annotations from {annotation_file}")
+            logger.info(f"Loading annotations from {annotation_file}")
             df_annotations = pd.read_csv(annotation_file, sep='\t')
             annotation_columns = df_annotations.columns
             
@@ -161,8 +163,6 @@ def ensure_df_columns(df, df_path, annotation_folder=None):
                 raise ValueError(f"Data file {df_path} and annotation file {annotation_file} have common columns: {common_cols}. Please rename these columns to avoid confusion after merge.")
             
             df = df.merge(df_annotations, on='unique_cell_id', how='left', validate='many_to_one')
-            df_cols = df.columns
-            df_cols = [col for col in df_cols if 'feat' not in col]
             for col in annotation_columns:
                 if df[col].isna().any():
                     missing_ids = df.loc[df[col].isna(), "unique_cell_id"].unique()
@@ -170,11 +170,10 @@ def ensure_df_columns(df, df_path, annotation_folder=None):
                         f"Missing annotations for {len(missing_ids)} cells in column '{col}'."
                         f" Example missing unique_cell_id: {missing_ids[:15]}")
         else:
-            print(f"No annotation file found for {df_path} in {annotation_folder}. Skipping annotations.")
+            logger.info(f"No annotation file found for {df_path} in {annotation_folder}. Skipping annotations.")
 
     return df
 
-from collections import OrderedDict
 
 def derive_shape_labels(marker_types_for_shape):
     """
@@ -200,7 +199,6 @@ def build_shape_legend(cfg, x0, y_start, dx, dy, offset):
     y_start_shapes = y_start - (offset + 1) * dy
 
     shape_labels = derive_shape_labels(cfg.marker_types[cfg.shape_by])
-
 
     for i, (marker_sym, label_text) in enumerate(shape_labels.items()):
         lx = x0
@@ -232,6 +230,7 @@ def build_shape_legend(cfg, x0, y_start, dx, dy, offset):
 
     overlay = hv.Overlay(shape_entries + shape_texts)
     return overlay
+
 
 def build_color_legend(cfg, x0, y_start, dx, dy, unique_colors, color_by):
     color_entries = []
@@ -271,6 +270,7 @@ def build_color_legend(cfg, x0, y_start, dx, dy, unique_colors, color_by):
     overlay = hv.Overlay(color_entries + color_labels)
     return overlay
 
+
 def build_too_many_entries_label(x0, y_start, text):
     df = pd.DataFrame({
         "x": [x0],
@@ -285,19 +285,19 @@ def build_too_many_entries_label(x0, y_start, text):
         show_legend=False
     )
 
-def create_tab(file_name, cfg, annotation_folder=None):
+
+def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
 
     df = pd.read_csv(file_name, low_memory=False, sep='\t')
 
-    df = ensure_df_columns(df, file_name, annotation_folder)
+    df = ensure_df_columns(df, file_name, annotation_folder, tsv_dir)
     
-    print(f"Loaded {file_name} with {len(df)} rows")
+    logger.info(f"Loaded {file_name} with {len(df)} rows")
     filter_cols = df.columns
     filter_cols = [col for col in filter_cols if 'sig_prob' not in col]
     filter_cols = [col for col in filter_cols if 'soft_prob' not in col]
     filter_cols = [col for col in filter_cols if 'UMAP' not in col]
     filter_cols = [col for col in filter_cols if col not in ['cell_id', 'top_class', 'top_3_classes', 'top_3_classes_names', 'id']]
-
 
     borders = get_borders(df)
     initial_xlim = borders["x_range"]
@@ -333,12 +333,14 @@ def create_tab(file_name, cfg, annotation_folder=None):
     alpha_slider = pn.widgets.FloatSlider(name="Alpha", start=0.1, end=1.0, step=0.1, value=cfg.init_alpha)
 
     clear_filters_button = pn.widgets.Button(name="Clear Filters", button_type="primary")
+
     def clear_filters(event):
         for w in filters.values():
             w.value = []
     clear_filters_button.on_click(clear_filters)
 
     reset_zoom_button = pn.widgets.Button(name="Reset zoom", button_type="primary")
+
     def reset_zoom(event):
         range_stream.update(x_range=initial_xlim, y_range=initial_ylim)
         trigger.value = not trigger.value
@@ -353,7 +355,6 @@ def create_tab(file_name, cfg, annotation_folder=None):
     df["marker_type"] = df[cfg.shape_by].map(cfg.marker_types[cfg.shape_by]).fillna("circle")
     df["size"] = df["marker_type"].apply(lambda x: cfg.marker_sizes.get(x, 6))
     df["is_highlighted"] = df["unique_cell_id"].isin(cfg.highlighted_cells)
-
 
     @pn.depends(color_by, alpha_slider.param.value_throttled, trigger, **filters)
     def plot_umap(color_by, alpha, trigger, show_color_legend=True, show_shape_legend=True, **kwargs):
@@ -449,7 +450,6 @@ def create_tab(file_name, cfg, annotation_folder=None):
 
         return combined
 
-
     central_plot = pn.panel(plot_umap)
     left_sidebar.sizing_mode = 'stretch_both'
     left_sidebar.max_width = int(cfg.min_width*1.1)
@@ -458,6 +458,5 @@ def create_tab(file_name, cfg, annotation_folder=None):
     central_plot.sizing_mode = 'stretch_both'
 
     layout = pn.Row(left_sidebar, central_plot, right_sidebar, sizing_mode='stretch_both')
-
 
     return layout, plot_umap

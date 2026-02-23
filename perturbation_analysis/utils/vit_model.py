@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple, Union
+from loguru import logger
 
 import torch
 from transformers.modeling_outputs import BaseModelOutput
@@ -331,7 +332,7 @@ class ViTPoolClassifier(nn.Module):
         }
 
         status = self.encoder.load_state_dict(encoder_ckpt)
-        print(f"Encoder status: {status}")
+        logger.info(f"Encoder status: {status}")
 
         pool_ckpt = {
             k.replace("pool_model.", ""): v
@@ -341,9 +342,9 @@ class ViTPoolClassifier(nn.Module):
         pool_ckpt = {k.replace("1.", "0."): v for k, v in pool_ckpt.items()}
         if pool_ckpt and self.pool_model:
             status = self.pool_model.load_state_dict(pool_ckpt)
-            print(f"Pool model status: {status}")
+            logger.info(f"Pool model status: {status}")
         else:
-            print("No pool model found in checkpoint")
+            logger.info("No pool model found in checkpoint")
 
         if isinstance(classifier_paths, str):
             classifier_paths = [classifier_paths]
@@ -360,7 +361,7 @@ class ViTPoolClassifier(nn.Module):
                 k.replace("6.", "4."): v for k, v in classifier_ckpt.items()
             }
             status = self.classifiers[i].load_state_dict(classifier_ckpt)
-            print(f"Classifier {i+1} status: {status}")
+            logger.info(f"Classifier {i+1} status: {status}")
 
     def forward(self, x: torch.Tensor) -> ViTPoolModelOutput:
         b, c, h, w = x.shape

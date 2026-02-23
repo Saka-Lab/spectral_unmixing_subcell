@@ -32,19 +32,19 @@ def load_config():
     return SimpleNamespace(**config_data)
 
 
-def build_dashboard(umap_folder: str, annotation_folder: str = None):
+def build_dashboard(input_folder: str, annotation_folder: str = None, output_tsv_dir: Path = None):
     cfg = load_config()
 
-    if not os.path.exists(umap_folder):
-        typer.echo(f"Error: Folder {umap_folder} does not exist.", err=True)
+    if not os.path.exists(input_folder):
+        typer.echo(f"Error: Folder {input_folder} does not exist.", err=True)
         raise typer.Exit(code=1)
 
-    files = os.listdir(umap_folder)
+    files = os.listdir(input_folder)
     files = [f for f in files if f.endswith('.csv') or f.endswith('.tsv')]
-    csv_files = [str(Path(umap_folder) / f) for f in files]
+    csv_files = [str(Path(input_folder) / f) for f in files]
 
     if len(csv_files) == 0:
-        typer.echo(f"Error: No CSV files found in folder {umap_folder}", err=True)
+        typer.echo(f"Error: No CSV files found in folder {input_folder}", err=True)
         raise typer.Exit(code=1)
 
     typer.echo(f"\nFound {len(csv_files)} files to plot:")
@@ -52,7 +52,7 @@ def build_dashboard(umap_folder: str, annotation_folder: str = None):
 
     for i, file in enumerate(csv_files):
         typer.echo(f" - {file}")
-        layout, plot_umap = create_tab(file, cfg, annotation_folder)
+        layout, plot_umap = create_tab(file, cfg, annotation_folder, output_tsv_dir)
         tabs.append((file, layout))
 
     logger.info(f"Created {len(tabs)} tabs for the dashboard")
@@ -61,7 +61,7 @@ def build_dashboard(umap_folder: str, annotation_folder: str = None):
 
 @app.command()
 def serve(
-        umap_folder: str = typer.Option(
+        input_folder: str = typer.Option(
             "perturbation_data/subcell_results/10.0_99.99",
             "--umap-folder",
             "-u",
@@ -72,6 +72,13 @@ def serve(
             "--annotation-folder",
             "-a",
             help="Path to folder containing annotation CSV files (optional)",
+        ),
+        output_tsv_dir: Path = typer.Option(
+            "perturbation_data/umap",
+            "--output-tsv-dir",
+            "-otd",
+            help="Output directory for the exported tsv file with umap coords (must include .tsv at the end of the name)."
+                 " The name will <experiment name>_<selected subcell model>.tsv."
         ),
         port: int = typer.Option(
             5006,
@@ -85,19 +92,18 @@ def serve(
             help="Automatically open browser"
         )
 ):
-    dashboard, _ = build_dashboard(umap_folder, annotation_folder)
+    dashboard, _ = build_dashboard(input_folder, annotation_folder, output_tsv_dir)
     logger.info(f"Dashboard is now serving at port:{port}")
     pn.serve(dashboard, port=port, show=show, title="UMAP Dashboard")
 
 
-
 @app.command()
 def export(
-        umap_folder: str = typer.Option(
+        input_folder: str = typer.Option(
             "perturbation_data/subcell_results/10.0_99.99",
-            "--umap-folder",
+            "--input-folder",
             "-u",
-            help="Path to folder containing UMAP CSV/TSV files"
+            help="Path to folder containing subcell latent coords CSV/TSV files"
         ),
         annotation_folder: str = typer.Option(
             "perturbation_data/annotations",
@@ -105,15 +111,22 @@ def export(
             "-a",
             help="Path to folder containing annotation CSV files (optional)",
         ),
-        output_file: str = typer.Option(
-            "perturbation_data/snapshot.svg",
-            "--output-file",
+        output_tsv_dir: Path = typer.Option(
+            "perturbation_data/umap",
+            "--output-tsv-dir",
+            "-otd",
+            help="Output directory for the exported tsv file with umap coords (must include .tsv at the end of the name)."
+                 " The name will <experiment name>_<selected subcell model>.tsv."
+        ),
+        output_plot_file: Path = typer.Option(
+            "perturbation_data/plots/umap/snapshot.svg",
+            "--output-plot-file",
             "-o",
             help="Output filename for the exported SVG (must include .svg at the end of the name)"
         )
 ):
-    logger.info(f"Building dashboard from {umap_folder}...")
-    _, plot_umap = build_dashboard(umap_folder, annotation_folder)
+    logger.info(f"Building dashboard from {input_folder}...")
+    _, plot_umap = build_dashboard(input_folder, annotation_folder, output_tsv_dir)
 
     color_by_val = 'protein'
     alpha_val = 0.7
@@ -135,11 +148,12 @@ def export(
     bokeh_obj = hv.render(plot_snapshot)
     bokeh_obj.output_backend = "svg"
 
+    output_plot_file.parent.mkdir(parents=True, exist_ok=True)
     # Export (requires selenium + web driver)
-    logger.info(f"Exporting to {output_file}...")
-    export_svgs(bokeh_obj, filename=output_file)
+    logger.info(f"Exporting to {output_plot_file}...")
+    export_svgs(bokeh_obj, filename=str(output_plot_file))
 
-    logger.info(f"✓ Successfully exported to {output_file}")
+    logger.info(f"✓ Successfully exported to {output_plot_file}")
 
 
 if __name__ == "__main__":

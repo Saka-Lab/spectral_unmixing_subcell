@@ -348,13 +348,13 @@ class Subcell:
 
         nan_counts = df.isna().sum()
         if nan_counts.sum() > 0:
-            print(nan_counts[nan_counts > 0] / len(self.channels))
+            logger.debug(nan_counts[nan_counts > 0] / len(self.channels))
             # print the rows with NaNs
             nan_rows = df[df.isna().any(axis=1)]
             # remove all cols with prob or feat in them
             nan_rows = nan_rows.loc[:, ~nan_rows.columns.str.contains('prob|feat', case=False)]
             nan_rows = nan_rows.drop(columns=['top_class', 'top_3_classes', 'cell_id', 'protein', 'image_name'])
-            print(nan_rows.head())
+            logger.debug(nan_rows.head())
             raise ValueError(f"Found NaNs in {results_file} for {df['condition'].unique()}")
 
         # get the additional columns to the start of the dataframe
@@ -362,8 +362,8 @@ class Subcell:
         # reorder the columns
         df = df[additional_columns + [col for col in df.columns if col not in additional_columns]]
 
-        print(f"Processed file saved to {results_file}")
         df.to_csv(results_file, index=False, sep='\t')
+        logger.info(f"Processed file saved to {results_file}")
 
 
 def get_model(config):
