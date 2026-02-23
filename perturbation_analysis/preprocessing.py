@@ -27,7 +27,7 @@ def configure_experiment_channels(experiment):
 @app.command()
 def run(
     input_dir: Path = typer.Option(
-        Path("subcell_data/experiments"),
+        Path("perturbation_data/experiments"),
         "--input-dir",
         "-i",
         help="Directory containing subdirectories of experiments that contain single FOV image files",
@@ -36,13 +36,13 @@ def run(
         dir_okay=True,
     ),
     tmp_dir: Path = typer.Option(
-        Path("subcell_data/tmp"),
+        Path("perturbation_data/tmp"),
         "--tmp-dir",
         "-t",
         help="Temporary directory for intermediate results",
     ),
     output_dir: Path = typer.Option(
-        Path("subcell_data/preprocessing_results"),
+        Path("perturbation_data/preprocessing_results"),
         "--output-dir",
         "-o",
         help="Directory to save the processed images and segmentations",

@@ -50,7 +50,7 @@ def configure_experiment_channels(experiment):
 @app.command()
 def main(
         input_dir: Path = typer.Option(
-            "subcell_data/preprocessing_results",
+            "perturbation_data/preprocessing_results",
             "--input-dir",
             "-i",
             help="Directory containing subdirectories of experiments that contain single FOV image files",
@@ -97,13 +97,13 @@ def main(
             help="Maximum threshold for percentile normalization. Purely used for parsing the directory.",
         ),
         prep_dir: Path = typer.Option(
-            Path("subcell_data/subcell_prep"),
+            Path("perturbation_data/subcell_prep"),
             "--tmp-dir",
             "-t",
             help="Directory to store temporary files like the individual cell images.",
         ),
         output_dir: Path = typer.Option(
-            Path("subcell_data/subcell_results"),
+            Path("perturbation_data/subcell_results"),
             "--output-dir",
             "-o",
             help="Output directory of the final results of the SubCell experiment. B"

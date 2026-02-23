@@ -42,16 +42,16 @@ einops = ">=0.8.2, <0.9"
 boto3 = ">=1.42.40, <2"
 
 [feature.preprocess.tasks]
-split-images = "python ./subcell/split_lif.py"
-preprocess = "python ./subcell/preprocessing.py"
+split-images = "python ./perturbation_analysis/split_lif.py"
+preprocess = "python ./perturbation_analysis/preprocessing.py"
 
 [feature.subcell.tasks]
-subcell = "python ./subcell/run_subcell.py"
+subcell = "python ./perturbation_analysis/run_subcell.py"
 
 [feature.plotter.tasks]
-serve-umap= "python ./subcell/hv_plot.py serve"
-export-umap = "python ./subcell/hv_plot.py export"
-export-boxplot = "python ./subcell/box_plot.py"
+serve-umap= "python ./perturbation_analysis/hv_plot.py serve"
+export-umap = "python ./perturbation_analysis/hv_plot.py export"
+export-boxplot = "python ./perturbation_analysis/box_plot.py"
 correlation-analysis = "python ./unmixing_performance/run.py"
 
 [feature.subcell.dependencies]

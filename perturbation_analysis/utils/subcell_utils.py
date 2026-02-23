@@ -79,8 +79,8 @@ def get_condition(im_name):
 
     conditions_map = {
         'ActD': actD,
-        'SodiumArsenite': sodium_arsenite,
-        'Control': control
+        'SA': sodium_arsenite,
+        'Untreated': control
     }
 
     for condition, keywords in conditions_map.items():

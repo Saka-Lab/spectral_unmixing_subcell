@@ -166,7 +166,7 @@ def create_boxplot(box_df, marker, hue_order, plotting_constants, output_dir, co
 @app.command()
 def generate_boxplots(
         input_dir: Path = typer.Option(
-            Path.cwd() / "data" / "subcell_results"/ "10.0_99.99",
+            Path.cwd() / "perturbation_data" / "subcell_results"/ "10.0_99.99",
             "--input-dir",
             "-i",
             help="Directory containing subcellular classification results"
@@ -190,7 +190,7 @@ def generate_boxplots(
             help="Markers to plot (can be specified multiple times). Defaults to NPM1 and G3BP1"
         ),
         output_dir: Path = typer.Option(
-            Path("data/plots"),
+            Path("perturbation_data/plots"),
             "--output-dir",
             "-o",
             help="Base output directory for plots"

@@ -161,13 +161,13 @@ def plot_marker_distribution(
 @app.command()
 def main(
     input_dir: Path = typer.Option(
-        Path("subcell_data/subcell_results/10.0_99.99"),
+        Path("perturbation_data/subcell_results/10.0_99.99"),
         "--input-dir",
         "-i",
         help="Directory containing SubCell result TSV files.",
     ),
     annotations_dir: Path = typer.Option(
-        Path("subcell_data/annotations"),
+        Path("perturbation_data/annotations"),
         "--annotations-dir",
         "-a",
         help="Directory containing annotation files.",
