@@ -13,7 +13,7 @@ from utils.plot_utils import load_data
 
 app = typer.Typer(add_completion=False)
 
-DEFAULT_CONDITION_ORDER = ["ActD", "Control", "SA"]
+DEFAULT_CONDITION_ORDER = ["ActD", "Untreated", "SA"]
 DEFAULT_MARKERS = ["NPM1", "G3BP1"]
 
 
@@ -172,10 +172,10 @@ def main(
         "-a",
         help="Directory containing annotation files.",
     ),
-    round_name: str = typer.Option(
+    experiment: str = typer.Option(
         "20250610_umx-selected",
-        "--round-name",
-        "-r",
+        "--experiment-name",
+        "-e",
         help="Round name used to resolve input and annotation files.",
     ),
     interphase_only: bool = typer.Option(
@@ -194,30 +194,29 @@ def main(
         "-m",
         help="Model suffix used in the results filename.",
     ),
+    output_dir: Path = typer.Option(
+        Path("perturbation_data/plots"),
+        "--output-dir",
+        "-o",
+        help="Path to the output directory where resulting plots are stored. A subdirectory 'boxplots' will be created"
+             " in the output directory.",
+
+    ),
 ) -> None:
     constants, plotting_constants, rename_map = load_plot_configs()
 
     df = load_data(
         input_dir=input_dir,
         annotations_dir=annotations_dir,
-        round_name=round_name,
+        round_name=experiment,
         model=model,
         interphase_only=interphase_only,
         rename_map=rename_map,
     )
 
-    if "condition" in df.columns:
-        df["condition"] = df["condition"].replace(
-            {
-                "ActinomycinD": "ActD",
-                "SodiumArsenite": "SA",
-                "Untreated": "Control",
-            }
-        )
-
     box_df = prepare_box_dataframe(df, condensed=condensed, constants=constants)
 
-    output_dir = Path("plots") / round_name / "boxplots" / ("condensed" if condensed else "full")
+    output_dir = output_dir / "boxplots" / ("condensed" if condensed else "full")
     for marker in DEFAULT_MARKERS:
         plot_marker_distribution(
             box_df=box_df,

@@ -74,7 +74,7 @@ def get_condition(im_name):
 
     # List of condition names and their possible keywords in the image name
     actD = ['ActD', 'Act D', 'ActinomycinD', 'Actinomycin D']
-    sodium_arsenite = ['Sodium Arsenite', 'SodiumArsenite', 'NaAsO2', 'NaAsO']
+    sodium_arsenite = ['Sodium Arsenite', 'SodiumArsenite', 'NaAsO2', 'NaAsO', 'SA']
     control = ['Control', 'control', 'Unperturbed', 'unperturbed', 'Untreated', 'untreated']
 
     conditions_map = {
