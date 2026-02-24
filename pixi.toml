@@ -16,6 +16,9 @@ pixi-pycharm = ">=0.0.10,<0.0.11"
 [tool.pixi.pypi-dependencies]
 pixi_py = { path = ".", editable = true }
 
+[feature.download.dependencies]
+httpx = ">=0.28.1,<0.29"
+
 [feature.preprocess.dependencies]
 micro_sam = "*"
 
@@ -40,6 +43,9 @@ scikit-image = ">=0.26.0, <0.27"
 h5py = ">=3.15.1, <4"
 einops = ">=0.8.2, <0.9"
 boto3 = ">=1.42.40, <2"
+
+[feature.download.tasks]
+download = "python download_cli.py --dest ./"
 
 [feature.preprocess.tasks]
 split-images = "python ./perturbation_analysis/split_lif.py"
@@ -71,6 +77,7 @@ bokeh = ">=3.8.2, <4"
 selenium = ">=4.40.0, <5"
 
 [environments]
+download = { features = ["download"], solve-group = "torch-old" }
 preprocess = { features = ["preprocess"], solve-group = "torch-new" }
 subcell = { features = ["subcell"], solve-group = "torch-old" }
 plotter = { features = ["plotter"], solve-group = "torch-new" }

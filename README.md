@@ -60,7 +60,7 @@ This installs the dependencies for all environments related to this project.
 
 ## Expected directory structure and naming
 <details>
-<summary>Click to expand and see more information about configuration and data directories.</summary>
+<summary>Click to expand and see more information about configuration directories.</summary>
 
 ### Configs
 First there should be a `configs` directory. This directory contains configurations for the interactive visualization with bokeh:
@@ -101,18 +101,38 @@ This file can be used to customize the umap output. Different elements can be cu
 - The marker shapes, first a list of markers can be defined along with their sizes, then the column for which the shapes will be changed can be selected, and finally for each element of the column a partiular marker can be defined.
 
 - tooltip elements can be chosen. Each element requires two values: 'column' which is the name of the column in the dataframe, and 'label' which is what will be shown in the tooltip.
+</details>
 
-### Subcell Image Data
-The raw image data should be stored in a directory called `subcell_data`, which is present in this project directory.
+## Data download and layout
+<details>
+<summary>Click to expand and see more information about downloading the data and the data directorie's layout.</summary>
+### Downloading the data
+The data can be downloaded by using the download CLI. It has several commands:
+
+![download_cli](readme_images/download_cli.png)
+
+Important here are to provide the record-id and token. You run the CLI from the terminal
+in the following way:
+
+```pixi run download -r <record_id> -t <zenodo_token>```
+
+### Perturbation Image Data (SubCell workflow)
+The raw image data should be stored in a directory called `perturbation_data`, which is present in this project 
+directory after using the download CLI.
 In this directory, for running the workflow with default parameters, it is expected that there is a directory called 
 `raw`. This directory contains experiment directories with names of the user's choice, that should contain either
 `.lif` images. The dimension names and order of these images is expected to be `czyx`. The images
-can contain one or multiple scenes (Fields of View).
+can contain one or multiple scenes (Fields of View). The `perturbation_data` directory also contains a directory 
+`annotations` containing a csv file with cell cycle annotations of the cells.
+Furthermore, a directory `preprocessing_results` in `perturbation_data` contains a directory with the corrected 
+segmentations. By default these segmentations will be used for SubCell, but one can run the segmentation part of the
+SubCell workflow to get the uncorrected segmentations.
 
 ### Unmixing performance data
 By default, the data used for determining unmixing performance must be in a directory `unmixing_performance_data` in 
 this repository. This directory must contain directories with the names of the individual experiments / Fields of View,
 which contain `ome-tif` images with the `.tif` extension.
+
 </details>
 
 ## Running the workflows
@@ -280,7 +300,10 @@ filters_val = {
 ```
 The umap_config.yaml should have all proteins set to use the circle marker.
 
+### Boxplot visualization
+
 </details>
+
 
 ### Overview of workflow determining performance of unmixing using pearson correlation
 <details>
