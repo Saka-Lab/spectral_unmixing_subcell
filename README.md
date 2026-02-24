@@ -264,7 +264,8 @@ Optionally, input directory and output file name can be adjusted:
 ![export_umap_help](readme_images/export_umap_help.png)
 
 ### 5. Reproducing figures
-#### Figure 5c (SVG)
+**Figure 5c (SVG)**
+
 The hv_plot.py file should contain:
 ```
 color_by_val = 'protein'
@@ -274,7 +275,8 @@ filters_val = {
 ```
 The umap_config.yaml should have all proteins set to use the circle marker.
 
-#### Figure 5d (SVG)
+**Figure 5d (SVG)**
+
 The hv_plot.py file should contain:
 ```
 color_by_val = 'condition'
@@ -290,7 +292,8 @@ protein:
 ```
 The umap_config.yaml should have alpha-tubulin set to diamond and NPM1 set to square.
 
-#### Supplementary figure 5 (SVG)
+**Supplementary figure 5 (SVG)**
+
 The hv_plot.py file should contain:
 ```
 color_by_val = 'condition'
@@ -300,7 +303,20 @@ filters_val = {
 ```
 The umap_config.yaml should have all proteins set to use the circle marker.
 
-### Boxplot visualization
+**Figures 5e/5f**
+
+These figures can be reproduced by running the box_plot.py file.
+The script generates one plot per marker.
+For each pair of condition and subcellular_location, a boxplot is created visualizing the corresponding distribution found in the results file.
+
+The script can also be used to create boxplots for the other markers and has additional parameters:
+![split_lif](readme_images/boxplot_help.png)
+
+#### Default behaviour:
+
+- If an annotations file is present, only interphase cells are retained. This can be overridden using the --all-phases flag.
+- Subcellular classes are condensed from 30 categories to 15. To preserve the full set of 30 classes, use the --full flag.
+- Conditions are colored based according to what's defined in the configs/colormap.json.
 
 </details>
 
