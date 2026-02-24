@@ -2,10 +2,6 @@
 # Layout
 # ======================
 min_width: 200
-widget_width: 275
-min_plot_width: 800
-min_plot_height: 500
-init_dot_size: 10
 init_alpha: 0.7
 
 max_legend_entries: 31  # maximum number of entries to show in legend (if all subcell classes are present)
@@ -20,16 +16,12 @@ highlight_width: 3
 # ======================
 # Marker symbols
 # ======================
-t1: circle
-t2: diamond
-t3: square
-t4: plus
+# circle, diamond, square
 
 marker_sizes:
   circle: 8
   diamond: 12
   square: 12
-  plus: 12
 
   
 # ======================

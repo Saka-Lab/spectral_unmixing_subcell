@@ -1,0 +1,89 @@
+[project]
+authors = ["Elena Pianfetti <elena.pianfetti@embl.de>", "Wouter-Michiel Vierdag <michiel.vierdag@embl.de>"]
+channels = ["conda-forge", "pytorch"]
+description = "Using SubCell for classification in spectrally unmixed images."
+name = "Highly multiplexed SubCell"
+platforms = ["osx-arm64", "linux-64", "win-64"]
+version = "0.1.0"
+
+[dependencies]
+python = "3.11.*"
+loguru = ">=0.7.3,<0.8"
+typer = ">=0.21.1,<0.22"
+tqdm = ">=4.67.2,<5"
+pixi-pycharm = ">=0.0.10,<0.0.11"
+
+[tool.pixi.pypi-dependencies]
+pixi_py = { path = ".", editable = true }
+
+[feature.download.dependencies]
+httpx = ">=0.28.1,<0.29"
+
+[feature.preprocess.dependencies]
+micro_sam = "*"
+
+[feature.preprocess.target.osx-arm64.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cpu" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cpu" }
+
+[feature.preprocess.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu118" }
+
+[feature.subcell.target.osx-arm64.pypi-dependencies]
+torch = { version = "==2.4.1", index = "https://download.pytorch.org/whl/cpu" }
+torchvision = { version = "==0.19.*", index = "https://download.pytorch.org/whl/cpu" }
+
+[feature.subcell.pypi-dependencies]
+torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu118" }
+transformers = "==4.45.1"
+numpy = "<2"
+scikit-image = ">=0.26.0, <0.27"
+h5py = ">=3.15.1, <4"
+einops = ">=0.8.2, <0.9"
+boto3 = ">=1.42.40, <2"
+
+[feature.download.tasks]
+download = "python download_cli.py --dest ./"
+
+[feature.preprocess.tasks]
+split-images = "python ./perturbation_analysis/split_lif.py"
+preprocess = "python ./perturbation_analysis/preprocessing.py"
+
+[feature.subcell.tasks]
+subcell = "python ./perturbation_analysis/run_subcell.py"
+
+[feature.plotter.tasks]
+serve-umap= "python ./perturbation_analysis/hv_plot.py serve"
+export-umap = "python ./perturbation_analysis/hv_plot.py export"
+export-boxplot = "python ./perturbation_analysis/box_plot.py"
+correlation-analysis = "python ./unmixing_performance/run.py"
+
+[feature.subcell.dependencies]
+hdf5 = ">=1.14.6,<2"
+
+[feature.plotter.dependencies]
+umap-learn = ">=0.5.11,<0.6"
+firefox = ">=147.0.3,<148"
+geckodriver = ">=0.36.0,<0.37"
+seaborn = ">=0.13.2,<0.14"
+matplotlib = ">=3.10.8,<4"
+
+[feature.plotter.pypi-dependencies]
+panel = ">=1.8.7, <2"
+holoviews = ">=1.22.1, <2"
+bokeh = ">=3.8.2, <4"
+selenium = ">=4.40.0, <5"
+
+[environments]
+download = { features = ["download"], solve-group = "torch-old" }
+preprocess = { features = ["preprocess"], solve-group = "torch-new" }
+subcell = { features = ["subcell"], solve-group = "torch-old" }
+plotter = { features = ["plotter"], solve-group = "torch-new" }
+
+[pypi-dependencies]
+bioio = "*"
+bioio-lif = "*"
+bioio-ome-tiff = "*"
+bioio-tifffile = ">=1.3.0, <2"

@@ -1,4 +1,5 @@
-*.png
+perturbation_data/
+unmixing_performance_data/
 *.tiff
 *.tif
 *.lif
@@ -9,3 +10,4 @@ logs/
 *.csv
 *.tsv
 *.svg
+.idea/

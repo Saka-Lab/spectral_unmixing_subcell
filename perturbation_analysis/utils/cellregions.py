@@ -1,21 +1,120 @@
 # standard library imports
 from pathlib import Path
+from dataclasses import dataclass
 
 # third-party imports
+from skimage import measure
 import torch
 from torch.utils.data import Dataset
 import h5py
 import numpy as np
 from tqdm import tqdm
+import einops
+from bioio import BioImage
+from skimage.measure._regionprops import RegionProperties
+from loguru import logger
 
-# module imports
-from utils.utils import Spec3D, load_img_data, get_regionprops, get_patch
+
+def load_img_data(img_path, axis_str):
+    """Load image data from file."""
+    return BioImage(img_path).get_image_data(axis_str)
+
+
+def get_patch(regionprop, patch, patch_size, bg_masking):
+    if bg_masking:
+        img = regionprop.image_intensity
+        mask = einops.repeat(regionprop.image.astype(int), "X Y Z -> X Y Z C", C=img.shape[-1])
+        img = img * mask
+    else:
+        img = regionprop.original_crop
+
+    pad_img = np.zeros((
+            img.shape[0] + patch_size.x,
+            img.shape[1] + patch_size.y,
+            img.shape[2] + patch_size.z,
+            img.shape[3])
+    )
+    pad_img[
+        patch_size.x // 2 : -patch_size.x // 2,
+        patch_size.y // 2 : -patch_size.y // 2,
+        patch_size.z // 2 : -patch_size.z // 2,
+        :,
+    ] = img
+
+    img_patch = pad_img[
+        patch.x : patch.x + patch_size.x,
+        patch.y : patch.y + patch_size.y,
+        patch.z : patch.z + patch_size.z,
+        :,
+    ]
+
+    return img_patch
+
+
+def get_regionprops(img, labels, img_axis_str, label_axis_str):
+    """Get region properties from labels."""
+    # ensure correct dimensions
+    img = einops.rearrange(img, f"{' '.join(img_axis_str)} -> X Y Z C")
+    labels = einops.rearrange(labels, f"{' '.join(label_axis_str)} -> X Y Z")
+
+    # get region props
+    raw_props = measure.regionprops(labels, intensity_image=img)
+    regionprops = []
+    # I need the cropped image and the mask
+    for regionprop in raw_props:
+        min_x, min_y, min_z, max_x, max_y, max_z = regionprop.bbox
+        original_crop = img[min_x:max_x, min_y:max_y, min_z:max_z]
+        serializable = SerializableRegionProperties.from_regionprops(regionprops=regionprop, original_crop=original_crop)
+        regionprops.append(serializable)
+
+    return regionprops
+
+
+class SerializableRegionProperties(RegionProperties):
+    def __init__(self, slice=None, label=None, label_image=None, intensity_image=None, cache_active=None, extra_properties=None, original_crop=None):
+        super().__init__(slice, label, label_image, intensity_image, cache_active, extra_properties=extra_properties)
+        self.original_crop = original_crop
+        self._initialized = True
+
+    def __getattr__(self, attr):
+        if attr == "_initialized" or not self._initialized:
+            self.__init__()
+
+        super().__getattr__(attr)
+
+    @classmethod
+    def from_regionprops(cls, regionprops, original_crop=None):
+        return cls(
+            slice=regionprops.slice,
+            label=regionprops.label,
+            label_image=regionprops._label_image,
+            intensity_image=regionprops._intensity_image,
+            cache_active=regionprops._cache_active,
+            extra_properties=regionprops._extra_properties,
+            original_crop=original_crop
+        )
+
+@dataclass
+class Spec3D:
+    x: int
+    y: int
+    z: int
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.z == other.z
+
+    def tuple(self):
+        return self.x, self.y, self.z
+
+    @classmethod
+    def from_tuple(cls, t):
+        return cls(*t)
 
 
 class CellRegionDataset(Dataset):
     def __init__(
         self, img_dir, labels_dir, patch_size, bg_masking, h5_dir,
-        transform=None, experiment_name=None, min_th: float = None, max_th: float = None,
+        transform=None, experiment_name=None
     ):
 
         self.transform = transform
@@ -29,7 +128,7 @@ class CellRegionDataset(Dataset):
 
         exp_dir = img_dir / experiment_name
         lab_dir = labels_dir / experiment_name
-        print(f"Loading images from {exp_dir} and labels from {lab_dir}...")
+        logger.info(f"Loading images from {exp_dir} and labels from {lab_dir}...")
 
         self.hdf5_path = Path(h5_dir) / f"{experiment_name}_cell_regions.h5"
         img_paths = sorted(exp_dir.iterdir())
@@ -43,31 +142,27 @@ class CellRegionDataset(Dataset):
         label_paths = sorted(lab_dir.iterdir())
 
         if len(label_paths) == 0:   # no manual segmentation
-            print("No manual segmentations were found, fall back on processed masks")
+            logger.info("No manual segmentations were found, fall back on processed masks")
             labels_dir = labels_dir.parent / labels_dir.name.replace("manual_", "")
             lab_dir = labels_dir / experiment_name
             label_paths = sorted(lab_dir.iterdir())
 
-
         img_paths = [im for im in img_paths if im.suffix.lower() in ('.tif', '.tiff', '.png', '.jpg')]
         label_paths = [im for im in label_paths if im.suffix.lower() in ('.tif', '.tiff', '.png', '.jpg')]
 
-        print(f"Found {len(img_paths)} images and {len(label_paths)} labels")
-
+        logger.info(f"Found {len(img_paths)} images and {len(label_paths)} labels")
 
         # check the correspondence between images and labels
         mismatch = False
         if len(img_paths) == len(label_paths):
             for i in range(len(img_paths)):
                 if not img_paths[i].name == label_paths[i].name:
-                    print("Mismatch between image and label names")
-                    print(f"Image: {img_paths[i].name}\nLabel: {label_paths[i].name}")
+                    logger.debug("Mismatch between image and label names")
+                    logger.debug(f"Image: {img_paths[i].name}\nLabel: {label_paths[i].name}")
                     mismatch = True
         else:
             mismatch = True
         if mismatch:
-            print("Please make sure that the images and labels have the same names")
-            print("Exiting...")
             raise ValueError("Mismatch between images and labels")
 
         imgs = [load_img_data(img_path, "CZYX") for img_path in img_paths]
@@ -77,8 +172,8 @@ class CellRegionDataset(Dataset):
         all_regionprops = []
         for img, label, img_path in zip(imgs, labels, img_paths):
             if img.shape[1:] != label.shape:
-                print(f"Something went wrong with the shapes skipping {img_path}")
-                print(f"img shape: {img.shape[1:]}\tlabel shape: {label.shape}")
+                logger.info(f"Something went wrong with the shapes skipping {img_path}")
+                logger.info(f"img shape: {img.shape[1:]}\tlabel shape: {label.shape}")
                 continue
             original_shape = img.shape
             regionprops = get_regionprops(img, label, "CZYX", "ZYX")
@@ -92,8 +187,7 @@ class CellRegionDataset(Dataset):
 
         # numer of sample in the dataset
         dataset_shape = (self.num_patches, *patch_size.tuple(), img.shape[0])    # nimages, patch, patch, z.stacks, channels
-        print(f"Shape: {dataset_shape}")
-
+        logger.info(f"Shape of dataset: {dataset_shape}")
 
         with h5py.File(self.hdf5_path, "w") as h5f:
             str_dtype = h5py.string_dtype(encoding='utf-8')
@@ -105,7 +199,7 @@ class CellRegionDataset(Dataset):
             cell_idx = 0
             last_cell_idx = -1
             for regionprops, img_path, tqdm_total, original_shape in all_regionprops:
-                print(f"Processing {img_path}...")
+                logger.info(f"Processing {img_path}...")
                 img_name = '.'.join(img_path.split('.')[0:-1])
                 for patch, local_cell_idx, centroid_coords, lab in tqdm(
                     self.img_generator(regionprops, patch_size, bg_masking), total=tqdm_total):
@@ -128,7 +222,7 @@ class CellRegionDataset(Dataset):
 
                     idx += 1
 
-        print(f"Saved {idx} samples to {self.hdf5_path}")
+        logger.info(f"Saved {idx} samples to {self.hdf5_path}")
 
         
     def img_generator(self, regionprops, patch_size, bg_masking):
