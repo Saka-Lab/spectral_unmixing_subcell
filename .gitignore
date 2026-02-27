@@ -11,3 +11,4 @@ logs/
 *.tsv
 *.svg
 .idea/
+*DS_Store
