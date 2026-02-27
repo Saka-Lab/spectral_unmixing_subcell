@@ -146,12 +146,17 @@ def ensure_df_columns(df, df_path, annotation_folder=None, tsv_dir=None):
         df.to_csv(save_path, index=False, sep='\t')
 
     if annotation_folder is not None:
-        annotation_file = Path(annotation_folder) / Path(df_path).name
+        annotation_file = Path(annotation_folder) / (Path(df_path).stem + "_annotationsBoxData.csv")
         if annotation_file.exists():
             logger.info(f"Loading annotations from {annotation_file}")
-            df_annotations = pd.read_csv(annotation_file, sep='\t')
+            df_annotations = pd.read_csv(annotation_file)
+
+            if "Label" in df_annotations.columns:
+                df_annotations.rename(columns={"Label": "unique_cell_id"}, inplace=True)
             annotation_columns = df_annotations.columns
-            
+            df_annotations['Image'] = df_annotations['Image'].str.replace('.tif', '', regex=False)
+            df_annotations['unique_cell_id'] = df_annotations['Image'] + '_' + df_annotations['unique_cell_id'].astype(str)
+
             # check whether unique_cell_id exist in both dataframes
             if 'unique_cell_id' not in df_annotations.columns:
                 raise ValueError(f"Annotation file {annotation_file} must contain a 'unique_cell_id' column.")
@@ -357,7 +362,7 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
     df["is_highlighted"] = df["unique_cell_id"].isin(cfg.highlighted_cells)
 
     @pn.depends(color_by, alpha_slider.param.value_throttled, trigger, **filters)
-    def plot_umap(color_by, alpha, trigger, show_color_legend=True, show_shape_legend=True, **kwargs):
+    def plot_umap(color_by, alpha, show_color_legend=True, show_shape_legend=True, **kwargs):
         # Filter data
         filtered = df
         for col, selected in kwargs.items():
