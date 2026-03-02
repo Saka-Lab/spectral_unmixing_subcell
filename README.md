@@ -1,6 +1,6 @@
 ## Overview
 This repository provides the end-to-end workflow used in the paper [here](to_be_decided).
-The workflow starts with raw image data, processes it and runs SubCell classicication. Results
+The workflow starts with raw image data, processes it and runs SubCell classification. Results
 can be interactively visualized afterwards. The code is specific to the data used in the paper,
 but can be adjusted to your own data.
 
