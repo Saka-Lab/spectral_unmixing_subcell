@@ -105,7 +105,7 @@ This file can be used to customize the umap output. Different elements can be cu
 
 ## Data download and layout
 <details>
-<summary>Click to expand and see more information about downloading the data and the data directorie's layout.</summary>
+<summary>Click to expand and see more information about downloading the data and the data directory's layout.</summary>
 ### Downloading the data
 The data can be downloaded by using the download CLI. It has several commands:
 
