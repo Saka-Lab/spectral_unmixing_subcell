@@ -338,13 +338,6 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
     initial_xlim = borders["x_range"]
     initial_ylim = borders["y_range"]
 
-    # in the condition column replace ActinomycinD with ActD, SodiumArsenite with SA
-    if 'condition' in df.columns:
-        df['condition'] = df['condition'].replace({
-            'ActinomycinD': 'ActD',
-            'SodiumArsenite': 'SA'
-        })
-
     # legend computations
     x0 = initial_xlim[0] + 0.75 * (initial_xlim[1] - initial_xlim[0])
     y_start = initial_ylim[1] - 0.05 * (initial_ylim[1] - initial_ylim[0])

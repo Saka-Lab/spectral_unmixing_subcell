@@ -1,4 +1,4 @@
-[project]
+[workspace]
 authors = ["Elena Pianfetti <elena.pianfetti@embl.de>", "Wouter-Michiel Vierdag <michiel.vierdag@embl.de>"]
 channels = ["conda-forge", "pytorch"]
 description = "Using SubCell for classification in spectrally unmixed images."

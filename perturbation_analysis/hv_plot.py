@@ -74,12 +74,6 @@ EXPORT_PRESETS = {
     },
 }
 
-FILTER_COLUMN_ALIASES = {
-    "CellCycle": ("CellCycle", "cell_cycle_phase"),
-    "cell_cycle_phase": ("cell_cycle_phase", "CellCycle"),
-}
-
-
 class ExportPreset(str, Enum):
     fig5c = "fig5c"
     fig5d = "fig5d"
@@ -139,40 +133,6 @@ def build_dashboard(
 
     logger.info(f"Created {len(tabs)} tabs for the dashboard")
     return tabs, plot_umap, filter_columns
-
-
-def _resolve_filter_column_name(column_name: str, available_columns: list[str]) -> str | None:
-    if column_name in available_columns:
-        return column_name
-
-    for alias in FILTER_COLUMN_ALIASES.get(column_name, ()):
-        if alias in available_columns:
-            return alias
-
-    return None
-
-
-def _resolve_export_filters(filters: dict, available_columns: list[str]) -> dict:
-    resolved_filters = {}
-    for column_name, selected_values in filters.items():
-        resolved_column = _resolve_filter_column_name(column_name, available_columns)
-        if resolved_column is None:
-            logger.warning(f"Skipping filter '{column_name}' because the column is not present in the dataframe.")
-            continue
-        resolved_filters[resolved_column] = selected_values
-    return resolved_filters
-
-
-def _resolve_color_by(color_by: str, available_columns: list[str]) -> str:
-    if color_by in available_columns:
-        return color_by
-
-    fallback_color_by = "protein" if "protein" in available_columns else available_columns[0]
-    logger.warning(
-        f"Requested color_by '{color_by}' is not present in the dataframe. "
-        f"Falling back to '{fallback_color_by}'."
-    )
-    return fallback_color_by
 
 
 def _build_export_options(preset: ExportPreset | None) -> dict:
@@ -272,7 +232,7 @@ def export(
     export_options = _build_export_options(preset)
 
     logger.info(f"Building dashboard from {input_folder}...")
-    _, plot_umap, filter_columns = build_dashboard(
+    _, plot_umap, _ = build_dashboard(
         input_folder,
         annotation_folder,
         output_tsv_dir,
@@ -280,9 +240,9 @@ def export(
         shape_by_override=export_options["shape_by"],
     )
 
-    color_by_val = _resolve_color_by(export_options["color_by"], filter_columns)
+    color_by_val = export_options["color_by"]
     alpha_val = export_options["alpha"]
-    filters_val = _resolve_export_filters(export_options["filters"], filter_columns)
+    filters_val = export_options["filters"]
 
     kwargs = {**filters_val}
     logger.info(f"Generating plot snapshot...")
