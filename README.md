@@ -48,14 +48,28 @@ To enable autocompletion, add to your `.bashrc`:
 
 ### Installing Dependencies
 
-Once pixi is installed, you can install the project dependencies:
+Once pixi is installed, you can install the project dependencies. Before that please check which CUDA version is 
+supported. For MacOS only cpu is allowed. To install the cpu version run:
 
 ```
-# Install all dependencies
-pixi install -a
+pixi install -e download -e plotter -e preprocess-cpu -e subcell-cpu  
+```
+On Linux and Windows, please check in the terminal the output of `nvidia-smi`. If a 12.* CUDA version is supported
+(top bar of the output), then please install in the manner:
+
+```python
+pixi install -e download -e plotter -e preprocess-cu121 -e subcell-cu121
+```
+
+Else if only CUDA version 11.* is supported install like this:
+
+```python
+pixi install -e download -e plotter -e preprocess-cu118 -e subcell-cu118
 ```
 
 This installs the dependencies for all environments related to this project.
+If you don't have a NVIDIA GPU or nvidia-smi is not a valid command please install the cpu
+dependencies as mentioned or MacOS.
 </details>
 
 ## Expected directory structure and naming

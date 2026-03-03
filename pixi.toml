@@ -22,21 +22,69 @@ httpx = ">=0.28.1,<0.29"
 [feature.preprocess.dependencies]
 micro_sam = "*"
 
-[feature.preprocess.target.osx-arm64.pypi-dependencies]
+[feature.preprocess-cpu.target.osx-arm64.pypi-dependencies]
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cpu" }
 torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cpu" }
 
-[feature.preprocess.pypi-dependencies]
+[feature.preprocess-cu118.target.linux-64.pypi-dependencies]
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
 torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu118" }
 
-[feature.subcell.target.osx-arm64.pypi-dependencies]
+[feature.preprocess-cu118.target.win-64.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu118" }
+
+[feature.preprocess-cu121.target.linux-64.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu121" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu121" }
+
+[feature.preprocess-cu121.target.win-64.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu121" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu121" }
+
+[feature.subcell-cpu.target.osx-arm64.pypi-dependencies]
 torch = { version = "==2.4.1", index = "https://download.pytorch.org/whl/cpu" }
 torchvision = { version = "==0.19.*", index = "https://download.pytorch.org/whl/cpu" }
+transformers = "==4.45.1"
+numpy = "<2"
+scikit-image = ">=0.26.0, <0.27"
+h5py = ">=3.15.1, <4"
+einops = ">=0.8.2, <0.9"
+boto3 = ">=1.42.40, <2"
 
-[feature.subcell.pypi-dependencies]
+[feature.subcell-cu118.target.linux-64.pypi-dependencies]
 torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu118" }
 torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu118" }
+transformers = "==4.45.1"
+numpy = "<2"
+scikit-image = ">=0.26.0, <0.27"
+h5py = ">=3.15.1, <4"
+einops = ">=0.8.2, <0.9"
+boto3 = ">=1.42.40, <2"
+
+[feature.subcell-cu118.target.win-64.pypi-dependencies]
+torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu118" }
+transformers = "==4.45.1"
+numpy = "<2"
+scikit-image = ">=0.26.0, <0.27"
+h5py = ">=3.15.1, <4"
+einops = ">=0.8.2, <0.9"
+boto3 = ">=1.42.40, <2"
+
+[feature.subcell-cu121.target.linux-64.pypi-dependencies]
+torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu121" }
+torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu121" }
+transformers = "==4.45.1"
+numpy = "<2"
+scikit-image = ">=0.26.0, <0.27"
+h5py = ">=3.15.1, <4"
+einops = ">=0.8.2, <0.9"
+boto3 = ">=1.42.40, <2"
+
+[feature.subcell-cu121.target.win-64.pypi-dependencies]
+torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu121" }
+torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu121" }
 transformers = "==4.45.1"
 numpy = "<2"
 scikit-image = ">=0.26.0, <0.27"
@@ -77,10 +125,17 @@ bokeh = ">=3.8.2, <4"
 selenium = ">=4.40.0, <5"
 
 [environments]
-download = { features = ["download"], solve-group = "torch-old" }
-preprocess = { features = ["preprocess"], solve-group = "torch-new" }
-subcell = { features = ["subcell"], solve-group = "torch-old" }
-plotter = { features = ["plotter"], solve-group = "torch-new" }
+preprocess-cpu = { features = ["preprocess", "preprocess-cpu"] }
+subcell-cpu    = { features = ["subcell", "subcell-cpu"] }
+
+preprocess-cu118 = { features = ["preprocess", "preprocess-cu118"], solve-group = "cu118-new" }
+subcell-cu118    = { features = ["subcell", "subcell-cu118"], solve-group = "cu118-old" }
+
+preprocess-cu121 = { features = ["preprocess", "preprocess-cu121"], solve-group = "cu121-new" }
+subcell-cu121    = { features = ["subcell", "subcell-cu121"], solve-group = "cu121-old" }
+
+download = { features = ["download"] }
+plotter  = { features = ["plotter"] }
 
 [pypi-dependencies]
 bioio = "*"
