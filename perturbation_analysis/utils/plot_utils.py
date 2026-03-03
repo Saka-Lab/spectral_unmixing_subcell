@@ -11,7 +11,7 @@ from bokeh.models import HoverTool
 
 def load_data(input_dir, annotations_dir, round_name, model, interphase_only=False, rename_map=None):
     data_file = Path(input_dir) / f"{round_name}_{model}.tsv"
-    annotation_file = Path(annotations_dir) / f"{round_name}_{model}.csv"
+    annotation_file = Path(annotations_dir) / f"{round_name}_{model}_annotationsBoxData.csv"
     # Read data
     # check if the file exists
     if data_file.exists():
@@ -25,6 +25,7 @@ def load_data(input_dir, annotations_dir, round_name, model, interphase_only=Fal
         if 'unique_cell_id' not in annotations.columns:
             logger.warning(
                 f"'unique_cell_id' column not found in annotations data file {annotation_file}. Trying to create it from 'Image' and 'Label' columns.")
+            annotations['Image'] = annotations['Image'].str.replace('.tif', '', regex=False)
             annotations["unique_cell_id"] = annotations["Image"].astype(str) + "_" + annotations["Label"].astype(str)
 
         if 'unique_cell_id' not in df.columns:
@@ -143,9 +144,6 @@ def ensure_df_columns(df, df_path, annotation_folder=None, tsv_dir=None):
         raise ValueError(f"DataFrame {df_path} contains NaN values. Please check the input data.")
 
     if f'UMAP1' not in df.columns:
-        if f'UMAP1' in df.columns:
-            df = df.drop(columns=[f'UMAP1', f'UMAP2'])
-
         logger.info(f"Calculating UMAP")
         embeddings = df[[col for col in df.columns if col.startswith("feat")]].to_numpy()
         umap_model = umap.UMAP(n_neighbors=20, metric="cosine", min_dist=0.5, random_state=42)
@@ -441,7 +439,7 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
                     alpha=1.0,
                     line_color=cfg.highlight_color,
                     line_width=cfg.highlight_width,
-                    line_dash="dashed",
+                    line_dash="solid",
                     tools=[hover_tool, "tap"],
                     show_legend=False,
                 )

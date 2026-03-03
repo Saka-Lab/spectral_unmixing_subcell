@@ -27,6 +27,7 @@ DEFAULT_EXPORT_OPTIONS = {
     "filters": {},
     "shape_by": "protein",
     "show_shape_legend": False,
+    "highlighted_cells": [],
     "marker_types": {
         "protein": {},
     },
@@ -41,6 +42,7 @@ EXPORT_PRESETS = {
         },
         "shape_by": "protein",
         "show_shape_legend": False,
+        "highlighted_cells": [],
         "marker_types": {
             "protein": {},
         }
@@ -53,6 +55,7 @@ EXPORT_PRESETS = {
         },
         "shape_by": "protein",
         "show_shape_legend": True,
+        "highlighted_cells": ["SA_FOV1_70", "SA_FOV2_70", "ActD_FOV1_19", "ActD_FOV1_19", "Untreated_FOV1_102", "Untreated_FOV2_102"],
         "marker_types": {
             "protein": {
                 "alphaTUBULIN": "diamond",
@@ -68,11 +71,13 @@ EXPORT_PRESETS = {
         },
         "shape_by": "protein",
         "show_shape_legend": False,
+        "highlighted_cells": [],
         "marker_types": {
             "protein": {},
         },
     },
 }
+
 
 class ExportPreset(str, Enum):
     fig5c = "fig5c"
@@ -80,7 +85,11 @@ class ExportPreset(str, Enum):
     supp_fig5 = "supp_fig5"
 
 
-def load_config(marker_type_overrides: dict | None = None, shape_by_override: str | None = None):
+def load_config(
+        marker_type_overrides: dict | None = None,
+        shape_by_override: str | None = None,
+        highlighted_cells_override: list[str] | None = None,
+):
     """Load configuration files"""
     with open('configs/umap_config.yaml') as f:
         config_data = yaml.safe_load(f)
@@ -96,6 +105,9 @@ def load_config(marker_type_overrides: dict | None = None, shape_by_override: st
     if shape_by_override is not None:
         config_data["shape_by"] = shape_by_override
 
+    if highlighted_cells_override is not None:
+        config_data["highlighted_cells"] = highlighted_cells_override
+
     return SimpleNamespace(**config_data)
 
 
@@ -105,8 +117,9 @@ def build_dashboard(
         output_tsv_dir: Path = None,
         marker_type_overrides: dict | None = None,
         shape_by_override: str | None = None,
+        highlighted_cells_override: list[str] | None = None,
 ):
-    cfg = load_config(marker_type_overrides, shape_by_override)
+    cfg = load_config(marker_type_overrides, shape_by_override, highlighted_cells_override)
 
     if not os.path.exists(input_folder):
         typer.echo(f"Error: Folder {input_folder} does not exist.", err=True)
@@ -143,6 +156,7 @@ def _build_export_options(preset: ExportPreset | None) -> dict:
             "filters": dict(DEFAULT_EXPORT_OPTIONS["filters"]),
             "shape_by": DEFAULT_EXPORT_OPTIONS["shape_by"],
             "show_shape_legend": DEFAULT_EXPORT_OPTIONS["show_shape_legend"],
+            "highlighted_cells": list(DEFAULT_EXPORT_OPTIONS["highlighted_cells"]),
             "marker_types": DEFAULT_EXPORT_OPTIONS["marker_types"],
         }
 
@@ -153,6 +167,7 @@ def _build_export_options(preset: ExportPreset | None) -> dict:
         "filters": dict(preset_options["filters"]),
         "shape_by": preset_options["shape_by"],
         "show_shape_legend": preset_options["show_shape_legend"],
+        "highlighted_cells": preset_options["highlighted_cells"],
         "marker_types": dict(preset_options["marker_types"]),
     }
 
@@ -238,6 +253,7 @@ def export(
         output_tsv_dir,
         marker_type_overrides=export_options["marker_types"],
         shape_by_override=export_options["shape_by"],
+        highlighted_cells_override=export_options["highlighted_cells"],
     )
 
     color_by_val = export_options["color_by"]
