@@ -204,11 +204,11 @@ However, this is not the default.
 Individual cell images are then fed to the SubCell model of choice for protein localization classification.
 
 SubCell is a suite of multiple models that were trained with different reference channels and different objectives.
-In this work we used two reference channels (alpha-tubulin and DAPI) and the third channel was the protein of interest (each of the 15 acquired in the panel).
+In this work we used two reference channels (alphaTUBULIN and DAPI) and the third channel was the protein of interest (each of the 15 acquired in the panel).
 This setting corresponds to the argument `--model-channels rbg`.
 The other possible combinations (as can be seen in the models/ directory) are:
 - `--model-channels bg`, which uses DAPI and protein of interest;
-- `--model-channels rybg`, which uses alpha-tubulin, endoplasmic reticulum, DAPI, and protein of interest;
+- `--model-channels rybg`, which uses alphaTUBULIN, endoplasmic reticulum, DAPI, and protein of interest;
 - `--model-channels ybg`, which uses endoplasmic reticulum, DAPI, and protein of interest.
 
 SubCell models were trained with different objectives:
@@ -266,48 +266,32 @@ Optionally, input directory and output file name can be adjusted:
 ### 5. Reproducing figures
 **Figure 5c (SVG)**
 
-The hv_plot.py file should contain:
-```
-color_by_val = 'protein'
-filters_val = {
-    "CellCycle": ["Interphase"],
-}
-```
-The umap_config.yaml should have all proteins set to use the circle marker.
+`pixi run reproduce_fig5c`
+
+This exports `perturbation_data/plots/umap/fig5c.svg`.
 
 **Figure 5d (SVG)**
 
-The hv_plot.py file should contain:
-```
-color_by_val = 'condition'
-filters_val = {
-    "CellCycle": ["Interphase"],
-    "protein": ['G3BP1', 'alphaTUBULIN', 'NPM1'],
-}
-```
-```
-protein:
-    alpha-tubulin: diamond
-    NPM1: square
-```
-The umap_config.yaml should have alpha-tubulin set to diamond and NPM1 set to square.
+`pixi run reproduce_fig5d`
+
+This exports `perturbation_data/plots/umap/fig5d.svg`.
 
 **Supplementary figure 5 (SVG)**
 
-The hv_plot.py file should contain:
-```
-color_by_val = 'condition'
-filters_val = {
-    "CellCycle": ["Interphase"],
-}
-```
-The umap_config.yaml should have all proteins set to use the circle marker.
+`pixi run reproduce_supp_fig5`
+
+This exports `perturbation_data/plots/umap/supp_fig5.svg`.
 
 **Figures 5e/5f**
 
-These figures can be reproduced by running the box_plot.py file.
+`pixi run reproduce_fig5ef`
+
+These figures are reproduced by running `box_plot.py`.
 The script generates one plot per marker.
 For each pair of condition and subcellular_location, a boxplot is created visualizing the corresponding distribution found in the results file.
+
+If you need to customize inputs or output path for the UMAP exports, use:
+`pixi run export-umap --preset fig5c|fig5d|supp_fig5 --output-plot-file <path_to_svg>`
 
 The script can also be used to create boxplots for the other markers and has additional parameters:
 ![split_lif](readme_images/boxplot_help.png)

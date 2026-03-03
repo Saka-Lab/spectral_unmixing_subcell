@@ -47,9 +47,9 @@ marker_types:
     Exclude: diamond
 
   protein:
-    alpha-tubulin: diamond
-    G3BP1: diamond
-    NPM1: square
+    alphaTUBULIN: circle
+    G3BP1: circle
+    NPM1: circle
 
   condition:
     Untreated: circle

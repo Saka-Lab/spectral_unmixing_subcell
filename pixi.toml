@@ -58,6 +58,10 @@ subcell = "python ./perturbation_analysis/run_subcell.py"
 serve-umap= "python ./perturbation_analysis/hv_plot.py serve"
 export-umap = "python ./perturbation_analysis/hv_plot.py export"
 export-boxplot = "python ./perturbation_analysis/box_plot.py"
+reproduce_fig5c = "python ./perturbation_analysis/hv_plot.py export --preset fig5c --output-plot-file perturbation_data/plots/umap/fig5c.svg"
+reproduce_fig5d = "python ./perturbation_analysis/hv_plot.py export --preset fig5d --output-plot-file perturbation_data/plots/umap/fig5d.svg"
+reproduce_supp_fig5 = "python ./perturbation_analysis/hv_plot.py export --preset supp_fig5 --output-plot-file perturbation_data/plots/umap/supp_fig5.svg"
+reproduce_fig5ef = "python ./perturbation_analysis/box_plot.py"
 correlation-analysis = "python ./unmixing_performance/run.py"
 
 [feature.subcell.dependencies]

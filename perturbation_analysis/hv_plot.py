@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from enum import Enum
 
 import typer
 from utils.plot_utils import create_tab
@@ -20,7 +21,72 @@ hv.extension('bokeh')
 pn.extension()
 
 
-def load_config():
+DEFAULT_EXPORT_OPTIONS = {
+    "color_by": "protein",
+    "alpha": 0.7,
+    "filters": {},
+    "shape_by": "protein",
+    "show_shape_legend": False,
+    "marker_types": {
+        "protein": {},
+    },
+}
+
+EXPORT_PRESETS = {
+    "fig5c": {
+        "color_by": "protein",
+        "filters": {
+            "CellCycle": ["Interphase"],
+            "condition": ["Untreated"],
+        },
+        "shape_by": "protein",
+        "show_shape_legend": False,
+        "marker_types": {
+            "protein": {},
+        }
+    },
+    "fig5d": {
+        "color_by": "condition",
+        "filters": {
+            "CellCycle": ["Interphase"],
+            "protein": ["G3BP1", "alphaTUBULIN", "NPM1"],
+        },
+        "shape_by": "protein",
+        "show_shape_legend": True,
+        "marker_types": {
+            "protein": {
+                "alphaTUBULIN": "diamond",
+                "NPM1": "square",
+                "G3BP1": "circle",
+            },
+        },
+    },
+    "supp_fig5": {
+        "color_by": "condition",
+        "filters": {
+            "CellCycle": ["Interphase"],
+        },
+        "shape_by": "protein",
+        "show_shape_legend": False,
+        "marker_types": {
+            "protein": {},
+        },
+    },
+}
+
+FILTER_COLUMN_ALIASES = {
+    "CellCycle": ("CellCycle", "cell_cycle_phase"),
+    "cell_cycle_phase": ("cell_cycle_phase", "CellCycle"),
+}
+
+
+class ExportPreset(str, Enum):
+    fig5c = "fig5c"
+    fig5d = "fig5d"
+    supp_fig5 = "supp_fig5"
+
+
+def load_config(marker_type_overrides: dict | None = None, shape_by_override: str | None = None):
     """Load configuration files"""
     with open('configs/umap_config.yaml') as f:
         config_data = yaml.safe_load(f)
@@ -29,11 +95,24 @@ def load_config():
         colormaps = json.load(f)
         config_data['colormap_dict'] = colormaps
 
+    if marker_type_overrides:
+        marker_types = config_data.setdefault("marker_types", {})
+        marker_types.update(marker_type_overrides)
+
+    if shape_by_override is not None:
+        config_data["shape_by"] = shape_by_override
+
     return SimpleNamespace(**config_data)
 
 
-def build_dashboard(input_folder: str, annotation_folder: str = None, output_tsv_dir: Path = None):
-    cfg = load_config()
+def build_dashboard(
+        input_folder: str,
+        annotation_folder: str = None,
+        output_tsv_dir: Path = None,
+        marker_type_overrides: dict | None = None,
+        shape_by_override: str | None = None,
+):
+    cfg = load_config(marker_type_overrides, shape_by_override)
 
     if not os.path.exists(input_folder):
         typer.echo(f"Error: Folder {input_folder} does not exist.", err=True)
@@ -49,14 +128,73 @@ def build_dashboard(input_folder: str, annotation_folder: str = None, output_tsv
 
     typer.echo(f"\nFound {len(csv_files)} files to plot:")
     tabs = pn.Tabs()
+    filter_columns = []
 
-    for i, file in enumerate(csv_files):
+    for file in csv_files:
         typer.echo(f" - {file}")
-        layout, plot_umap = create_tab(file, cfg, annotation_folder, output_tsv_dir)
+        layout, plot_umap, tab_filter_columns = create_tab(file, cfg, annotation_folder, output_tsv_dir)
+        if not filter_columns:
+            filter_columns = tab_filter_columns
         tabs.append((file, layout))
 
     logger.info(f"Created {len(tabs)} tabs for the dashboard")
-    return tabs, plot_umap
+    return tabs, plot_umap, filter_columns
+
+
+def _resolve_filter_column_name(column_name: str, available_columns: list[str]) -> str | None:
+    if column_name in available_columns:
+        return column_name
+
+    for alias in FILTER_COLUMN_ALIASES.get(column_name, ()):
+        if alias in available_columns:
+            return alias
+
+    return None
+
+
+def _resolve_export_filters(filters: dict, available_columns: list[str]) -> dict:
+    resolved_filters = {}
+    for column_name, selected_values in filters.items():
+        resolved_column = _resolve_filter_column_name(column_name, available_columns)
+        if resolved_column is None:
+            logger.warning(f"Skipping filter '{column_name}' because the column is not present in the dataframe.")
+            continue
+        resolved_filters[resolved_column] = selected_values
+    return resolved_filters
+
+
+def _resolve_color_by(color_by: str, available_columns: list[str]) -> str:
+    if color_by in available_columns:
+        return color_by
+
+    fallback_color_by = "protein" if "protein" in available_columns else available_columns[0]
+    logger.warning(
+        f"Requested color_by '{color_by}' is not present in the dataframe. "
+        f"Falling back to '{fallback_color_by}'."
+    )
+    return fallback_color_by
+
+
+def _build_export_options(preset: ExportPreset | None) -> dict:
+    if preset is None:
+        return {
+            "color_by": DEFAULT_EXPORT_OPTIONS["color_by"],
+            "alpha": DEFAULT_EXPORT_OPTIONS["alpha"],
+            "filters": dict(DEFAULT_EXPORT_OPTIONS["filters"]),
+            "shape_by": DEFAULT_EXPORT_OPTIONS["shape_by"],
+            "show_shape_legend": DEFAULT_EXPORT_OPTIONS["show_shape_legend"],
+            "marker_types": DEFAULT_EXPORT_OPTIONS["marker_types"],
+        }
+
+    preset_options = EXPORT_PRESETS[preset.value]
+    return {
+        "color_by": preset_options["color_by"],
+        "alpha": DEFAULT_EXPORT_OPTIONS["alpha"],
+        "filters": dict(preset_options["filters"]),
+        "shape_by": preset_options["shape_by"],
+        "show_shape_legend": preset_options["show_shape_legend"],
+        "marker_types": dict(preset_options["marker_types"]),
+    }
 
 
 @app.command()
@@ -92,7 +230,7 @@ def serve(
             help="Automatically open browser"
         )
 ):
-    dashboard, _ = build_dashboard(input_folder, annotation_folder, output_tsv_dir)
+    dashboard, _, _ = build_dashboard(input_folder, annotation_folder, output_tsv_dir)
     logger.info(f"Dashboard is now serving at port:{port}")
     pn.serve(dashboard, port=port, show=show, title="UMAP Dashboard")
 
@@ -123,16 +261,28 @@ def export(
             "--output-plot-file",
             "-o",
             help="Output filename for the exported SVG (must include .svg at the end of the name)"
+        ),
+        preset: ExportPreset | None = typer.Option(
+            None,
+            "--preset",
+            "-p",
+            help="Preset used for reproducing figures from the manuscript."
         )
 ):
-    logger.info(f"Building dashboard from {input_folder}...")
-    _, plot_umap = build_dashboard(input_folder, annotation_folder, output_tsv_dir)
+    export_options = _build_export_options(preset)
 
-    color_by_val = 'protein'
-    alpha_val = 0.7
-    filters_val = {
-        "protein": ['G3BP1', 'alphaTUBULIN', 'NPM1'],
-    }
+    logger.info(f"Building dashboard from {input_folder}...")
+    _, plot_umap, filter_columns = build_dashboard(
+        input_folder,
+        annotation_folder,
+        output_tsv_dir,
+        marker_type_overrides=export_options["marker_types"],
+        shape_by_override=export_options["shape_by"],
+    )
+
+    color_by_val = _resolve_color_by(export_options["color_by"], filter_columns)
+    alpha_val = export_options["alpha"]
+    filters_val = _resolve_export_filters(export_options["filters"], filter_columns)
 
     kwargs = {**filters_val}
     logger.info(f"Generating plot snapshot...")
@@ -140,7 +290,7 @@ def export(
         color_by=color_by_val,
         alpha=alpha_val,
         trigger=False,
-        show_shape_legend=False,
+        show_shape_legend=export_options["show_shape_legend"],
         **kwargs
     )
 

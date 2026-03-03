@@ -16,12 +16,12 @@ from loguru import logger
 
 class Preprocess:
     def __init__(
-        self, name, exp_dir, channels, 
+        self, name, exp_dir, channels,
         min_th, max_th,
         seg_channels, seg_model, n_dim,
         min_cell_area,
         tmp_dir='tmp', res_dir='preprocessing_results'
-        ):
+    ):
         self.name = name
         self.exp_dir = exp_dir
         self.channels = channels
@@ -74,7 +74,7 @@ class Preprocess:
 
     # ---------- Image preprocessing ----------
     def _clamp_and_convert(self, img_path, channel_names):
-        clamp_path = self.res_dir/"8bits"/f"{self.min_th}_{self.max_th}"/self.name/img_path.name
+        clamp_path = self.res_dir / "8bits" / f"{self.min_th}_{self.max_th}" / self.name / img_path.name
         # if the file already exists skip
         if clamp_path.exists():
             return clamp_path
@@ -101,7 +101,7 @@ class Preprocess:
         return clamp_path
 
     def _convert_to_greyscale(self, img_path):
-        greyscale_path = self.res_dir/"greyscale"/f"{self.min_th}_{self.max_th}"/self.name/img_path.name
+        greyscale_path = self.res_dir / "greyscale" / f"{self.min_th}_{self.max_th}" / self.name / img_path.name
 
         if greyscale_path.exists():
             return greyscale_path
@@ -110,7 +110,6 @@ class Preprocess:
         img_data = BioImage(img_path).data
         # BioImage is a 5D array: T C Z Y X
         img_data = img_data[0]
-
 
         # find the indexes of the channels to use for segmentation
         idxs = [self.channels.index(channel) for channel in self.seg_channels]
@@ -125,7 +124,7 @@ class Preprocess:
         return greyscale_path
 
     def _segment_image(self, img_path):
-        seg_path = self.tmp_dir/"segmentations"/self.name/img_path.name
+        seg_path = self.tmp_dir / "segmentations" / self.name / img_path.name
 
         if seg_path.exists():
             return seg_path
@@ -135,16 +134,16 @@ class Preprocess:
         predictor, segmentor = get_predictor_and_segmenter(model_type=self.seg_model)
 
         automatic_instance_segmentation(
-                predictor=predictor,
-                segmenter=segmentor,
-                input_path=img_path,
-                output_path=seg_path,
-                ndim=self.n_dim,
-            )
+            predictor=predictor,
+            segmenter=segmentor,
+            input_path=img_path,
+            output_path=seg_path,
+            ndim=self.n_dim,
+        )
         return seg_path
 
     def _clean_mask(self, mask_path):
-        cleaned_mask_path = self.res_dir/"segmentations"/self.name/mask_path.name
+        cleaned_mask_path = self.res_dir / "segmentations" / self.name / mask_path.name
 
         if cleaned_mask_path.exists():
             return cleaned_mask_path
@@ -166,7 +165,7 @@ class Preprocess:
             else:
                 raise ValueError(f"Unsupported mask shape: {mask_data.shape}")
 
-        unique_labels = [label for label in np.unique(mask_data) if label != 0] # skip the background label
+        unique_labels = [label for label in np.unique(mask_data) if label != 0]  # skip the background label
         labels_to_keep = []
         # Analyze slice z=0 for filtering
         base_slice = mask_data[0]
@@ -202,7 +201,7 @@ class Preprocess:
         """
         logger.info(f"\n=== Running {self.name} ===")
         image_files = sorted(self.exp_dir.glob("*.tif"))
- 
+
         if not image_files:
             logger.debug(f"No images found for {self.name} in {self.exp_dir}")
             return
@@ -210,16 +209,16 @@ class Preprocess:
             logger.info(f"Found {len(image_files)} images.")
 
         for index, img_path in tqdm(enumerate(image_files), total=len(image_files)):
-            logger.info(f"Processing image {index+1} out of {len(image_files)}: {img_path}")
+            logger.info(f"Processing image {index + 1} out of {len(image_files)}: {img_path}")
             clamped = self._clamp_and_convert(img_path, self.channels)
 
             # if manual segmentations already exist skip greyscale, segmentation and mask processing
-            if (self.res_dir/"manual_segmentations"/self.name/img_path.name).exists():
-                logger.info(f"Manual segmentation already exists: {(self.res_dir/'manual_segmentations'/self.name/img_path.name)}")
+            if (self.res_dir / "manual_segmentations" / self.name / img_path.name).exists():
+                logger.info(f"Manual segmentation already exists: {(self.res_dir / 'manual_segmentations' / self.name / img_path.name)}")
                 continue
-            if (self.res_dir/"segmentations"/self.name/img_path.name).exists():
-                 logger.info(f"Segmentation image already exists: {(self.res_dir/'segmentations'/self.name/img_path.name)}")
-                 continue
+            if (self.res_dir / "segmentations" / self.name / img_path.name).exists():
+                logger.info(f"Segmentation image already exists: {(self.res_dir / 'segmentations' / self.name / img_path.name)}")
+                continue
             greyscale = self._convert_to_greyscale(clamped)
             mask = self._segment_image(greyscale)
             self._clean_mask(mask)

@@ -397,7 +397,7 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
     df["is_highlighted"] = df["unique_cell_id"].isin(cfg.highlighted_cells)
 
     @pn.depends(color_by, alpha_slider.param.value_throttled, trigger, **filters)
-    def plot_umap(color_by, alpha, show_color_legend=True, show_shape_legend=True, **kwargs):
+    def plot_umap(color_by, alpha, trigger, show_color_legend=True, show_shape_legend=False, **kwargs):
         # Filter data
         filtered = df
         for col, selected in kwargs.items():
@@ -498,4 +498,4 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
 
     layout = pn.Row(left_sidebar, central_plot, right_sidebar, sizing_mode='stretch_both')
 
-    return layout, plot_umap
+    return layout, plot_umap, filter_cols
