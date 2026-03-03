@@ -58,7 +58,7 @@ On Linux and Windows, please check in the terminal the output of `nvidia-smi`. I
 (top bar of the output), then please install in the manner:
 
 ```python
-pixi install -e download -e plotter -e preprocess-cu121 -e subcell-cu121
+pixi install -e download -e plotter -e preprocess-cu128 -e subcell-cu128
 ```
 
 Else if only CUDA version 11.* is supported install like this:

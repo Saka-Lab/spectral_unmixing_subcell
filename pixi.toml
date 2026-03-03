@@ -23,29 +23,29 @@ httpx = ">=0.28.1,<0.29"
 micro_sam = "*"
 
 [feature.preprocess-cpu.target.osx-arm64.pypi-dependencies]
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cpu" }
-torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cpu" }
+torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cpu" }
+torchvision = { version = ">=0.25.0", index = "https://download.pytorch.org/whl/cpu" }
 
 [feature.preprocess-cu118.target.linux-64.pypi-dependencies]
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
-torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu118" }
+torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = "<=0.25.0", index = "https://download.pytorch.org/whl/cu118" }
 
 [feature.preprocess-cu118.target.win-64.pypi-dependencies]
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
-torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu118" }
+torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = "<=0.25.0", index = "https://download.pytorch.org/whl/cu118" }
 
-[feature.preprocess-cu121.target.linux-64.pypi-dependencies]
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu121" }
-torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu121" }
+[feature.preprocess-cu128.target.linux-64.pypi-dependencies]
+torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cu128" }
+torchvision = { version = ">=0.25.0", index = "https://download.pytorch.org/whl/cu128" }
 
-[feature.preprocess-cu121.target.win-64.pypi-dependencies]
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu121" }
-torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu121" }
+[feature.preprocess-cu128.target.win-64.pypi-dependencies]
+torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cu128" }
+torchvision = { version = ">=0.25.0", index = "https://download.pytorch.org/whl/cu128" }
 
 [feature.subcell-cpu.target.osx-arm64.pypi-dependencies]
-torch = { version = "==2.4.1", index = "https://download.pytorch.org/whl/cpu" }
-torchvision = { version = "==0.19.*", index = "https://download.pytorch.org/whl/cpu" }
-transformers = "==4.45.1"
+torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cpu" }
+torchvision = { version = ">=0.25.0", index = "https://download.pytorch.org/whl/cpu" }
+transformers = "==4.49.0"
 numpy = "<2"
 scikit-image = ">=0.26.0, <0.27"
 h5py = ">=3.15.1, <4"
@@ -53,9 +53,9 @@ einops = ">=0.8.2, <0.9"
 boto3 = ">=1.42.40, <2"
 
 [feature.subcell-cu118.target.linux-64.pypi-dependencies]
-torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu118" }
-torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu118" }
-transformers = "==4.45.1"
+torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = "<=0.25.0", index = "https://download.pytorch.org/whl/cu118" }
+transformers = "==4.49.0"
 numpy = "<2"
 scikit-image = ">=0.26.0, <0.27"
 h5py = ">=3.15.1, <4"
@@ -63,29 +63,29 @@ einops = ">=0.8.2, <0.9"
 boto3 = ">=1.42.40, <2"
 
 [feature.subcell-cu118.target.win-64.pypi-dependencies]
-torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu118" }
-torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu118" }
-transformers = "==4.45.1"
+torch = { version = "<=2.5.1", index = "https://download.pytorch.org/whl/cu118" }
+torchvision = { version = "<=0.25.0", index = "https://download.pytorch.org/whl/cu118" }
+transformers = "==4.49.0"
 numpy = "<2"
 scikit-image = ">=0.26.0, <0.27"
 h5py = ">=3.15.1, <4"
 einops = ">=0.8.2, <0.9"
 boto3 = ">=1.42.40, <2"
 
-[feature.subcell-cu121.target.linux-64.pypi-dependencies]
-torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu121" }
-torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu121" }
-transformers = "==4.45.1"
+[feature.subcell-cu128.target.linux-64.pypi-dependencies]
+torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cu128" }
+torchvision = { version = ">=0.25.0", index = "https://download.pytorch.org/whl/cu128" }
+transformers = "==4.49.0"
 numpy = "<2"
 scikit-image = ">=0.26.0, <0.27"
 h5py = ">=3.15.1, <4"
 einops = ">=0.8.2, <0.9"
 boto3 = ">=1.42.40, <2"
 
-[feature.subcell-cu121.target.win-64.pypi-dependencies]
-torch = { version = "==2.3.0", index = "https://download.pytorch.org/whl/cu121" }
-torchvision = { version = "==0.18.*", index = "https://download.pytorch.org/whl/cu121" }
-transformers = "==4.45.1"
+[feature.subcell-cu128.target.win-64.pypi-dependencies]
+torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cu128" }
+torchvision = { version = ">=0.25.0", index = "https://download.pytorch.org/whl/cu128" }
+transformers = "==4.49.0"
 numpy = "<2"
 scikit-image = ">=0.26.0, <0.27"
 h5py = ">=3.15.1, <4"
@@ -131,8 +131,8 @@ subcell-cpu    = { features = ["subcell", "subcell-cpu"] }
 preprocess-cu118 = { features = ["preprocess", "preprocess-cu118"], solve-group = "cu118-new" }
 subcell-cu118    = { features = ["subcell", "subcell-cu118"], solve-group = "cu118-old" }
 
-preprocess-cu121 = { features = ["preprocess", "preprocess-cu121"], solve-group = "cu121-new" }
-subcell-cu121    = { features = ["subcell", "subcell-cu121"], solve-group = "cu121-old" }
+preprocess-cu128 = { features = ["preprocess", "preprocess-cu128"], solve-group = "cu128-new" }
+subcell-cu128    = { features = ["subcell", "subcell-cu128"], solve-group = "cu128-old" }
 
 download = { features = ["download"] }
 plotter  = { features = ["plotter"] }
