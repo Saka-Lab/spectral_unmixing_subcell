@@ -42,7 +42,7 @@ torchvision = { version = ">=0.25.0", index = "https://download.pytorch.org/whl/
 torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cu128" }
 torchvision = { version = ">=0.25.0", index = "https://download.pytorch.org/whl/cu128" }
 
-[feature.subcell-cpu.target.osx-arm64.pypi-dependencies]
+[feature.subcell-cpu.pypi-dependencies]
 torch = { version = ">=2.7.0", index = "https://download.pytorch.org/whl/cpu" }
 torchvision = { version = ">=0.25.0", index = "https://download.pytorch.org/whl/cpu" }
 transformers = "==4.49.0"
