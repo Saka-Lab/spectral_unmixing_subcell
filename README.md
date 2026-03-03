@@ -155,6 +155,10 @@ which contain `ome-tif` images with the `.tif` extension.
 <details>
 <summary>Click to expand and see more information about how to reproduce the SubCell workflow from the paper.</summary>
 
+Note: For the preprocess task and subcell task, when running them it will ask you to select the environment in which to 
+run the task. Please choose only the environment corresponding to the environments you installed as only that environment
+will work. You can do this by using the arrow keys to select the correct one and then pressing enter.
+
 #### 1. Splitting images into 1 scene per image file
 The workflow starts from raw `.lif` images. These are split into individual FOV
 images by running a CLI. To run with default parameters, in the command line ensure that you are in this repository 
