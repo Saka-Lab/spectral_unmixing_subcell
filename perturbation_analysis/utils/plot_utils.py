@@ -11,7 +11,7 @@ from bokeh.models import HoverTool
 
 def load_data(input_dir, annotations_dir, round_name, model, interphase_only=False, rename_map=None):
     data_file = Path(input_dir) / f"{round_name}_{model}.tsv"
-    annotation_file = Path(annotations_dir) / f"{round_name}_manual.csv"
+    annotation_file = Path(annotations_dir) / f"{round_name}_{model}.csv"
     # Read data
     # check if the file exists
     if data_file.exists():
@@ -20,10 +20,31 @@ def load_data(input_dir, annotations_dir, round_name, model, interphase_only=Fal
         raise FileNotFoundError(f"Data file not found: {data_file}")
     # check if annotations exist
     if annotation_file.exists():
-        annotations = pd.read_csv(annotation_file, sep="\t")
+        annotations = pd.read_csv(annotation_file)
+        # check if unique_cell_id column exists in both dataframes
+        if 'unique_cell_id' not in annotations.columns:
+            logger.warning(
+                f"'unique_cell_id' column not found in annotations data file {annotation_file}. Trying to create it from 'Image' and 'Label' columns.")
+            annotations["unique_cell_id"] = annotations["Image"].astype(str) + "_" + annotations["Label"].astype(str)
+
+        if 'unique_cell_id' not in df.columns:
+            raise ValueError(
+                f"'unique_cell_id' column not found in data file {data_file}. It is required to merge with annotations.")
         df = pd.merge(df, annotations, on="unique_cell_id", how="left")
+        # check if cell_cycle_phase or CellCycle column exists, if not raise a warning
+        if 'cell_cycle_phase' not in df.columns and 'CellCycle' not in df.columns:
+            logger.warning(
+                f"Neither 'cell_cycle_phase' nor 'CellCycle' column found in merged dataframe. Interphase filtering will be skipped.")
+        else:
+            cell_cycle_col = 'cell_cycle_phase' if 'cell_cycle_phase' in df.columns else 'CellCycle' if 'CellCycle' in df.columns else None
+            if cell_cycle_col is None:
+                raise ValueError("No cell cycle column found for interphase filtering.")
+            df = df.rename(columns={cell_cycle_col: 'cell_cycle_phase'})
+
         if interphase_only:
             df = df[df["cell_cycle_phase"] == "Interphase"]
+    else:
+        logger.warning(f"Annotation file not found: {annotation_file}. Proceeding without annotations.")
 
     # Features columns are not needed
     feat_cols = [col for col in df.columns if 'feat' in col]
@@ -124,7 +145,7 @@ def ensure_df_columns(df, df_path, annotation_folder=None, tsv_dir=None):
     if f'UMAP1' not in df.columns:
         if f'UMAP1' in df.columns:
             df = df.drop(columns=[f'UMAP1', f'UMAP2'])
-        
+
         logger.info(f"Calculating UMAP")
         embeddings = df[[col for col in df.columns if col.startswith("feat")]].to_numpy()
         umap_model = umap.UMAP(n_neighbors=20, metric="cosine", min_dist=0.5, random_state=42)
@@ -161,12 +182,15 @@ def ensure_df_columns(df, df_path, annotation_folder=None, tsv_dir=None):
             if 'unique_cell_id' not in df_annotations.columns:
                 raise ValueError(f"Annotation file {annotation_file} must contain a 'unique_cell_id' column.")
             if 'unique_cell_id' not in df.columns:
-                raise ValueError(f"Data file {df_path} must contain a 'unique_cell_id' column to merge with annotations.")
-            # check if there are common columns between df and df_annotations (except unique_cell_id), if so raise an error to avoid confusion after merge
+                raise ValueError(
+                    f"Data file {df_path} must contain a 'unique_cell_id' column to merge with annotations.")
+            # check if there are common columns between df and df_annotations (except
+            # unique_cell_id), if so raise an error to avoid confusion after merge
             common_cols = set(df.columns).intersection(set(df_annotations.columns)) - {'unique_cell_id'}
             if common_cols:
-                raise ValueError(f"Data file {df_path} and annotation file {annotation_file} have common columns: {common_cols}. Please rename these columns to avoid confusion after merge.")
-            
+                raise ValueError(
+                    f"Data file {df_path} and annotation file {annotation_file} have common columns: {common_cols}. Please rename these columns to avoid confusion after merge.")
+
             df = df.merge(df_annotations, on='unique_cell_id', how='left', validate='many_to_one')
             for col in annotation_columns:
                 if df[col].isna().any():
@@ -209,9 +233,9 @@ def build_shape_legend(cfg, x0, y_start, dx, dy, offset):
         lx = x0
         ly = y_start_shapes - i * dy
         # include a dummy vdims column so Scatter has at least one vdims
-        leg_df = pd.DataFrame({"x":[lx], "y":[ly], "marker_type":[marker_sym]})
+        leg_df = pd.DataFrame({"x": [lx], "y": [ly], "marker_type": [marker_sym]})
         shape_entries.append(
-        hv.Scatter(leg_df, kdims=['x','y'], vdims=['marker_type'])
+            hv.Scatter(leg_df, kdims=['x', 'y'], vdims=['marker_type'])
             .opts(
                 marker=marker_sym,
                 size=12,
@@ -222,9 +246,9 @@ def build_shape_legend(cfg, x0, y_start, dx, dy, offset):
                 show_legend=False
             )
         )
-        label_df = pd.DataFrame({"x":[lx + dx], "y":[ly], "text":[label_text]})
+        label_df = pd.DataFrame({"x": [lx + dx], "y": [ly], "text": [label_text]})
         shape_texts.append(
-            hv.Labels(label_df, kdims=['x','y'], vdims=['text']).opts(
+            hv.Labels(label_df, kdims=['x', 'y'], vdims=['text']).opts(
                 text_font_size='15pt',
                 text_color='black',
                 text_align='left',
@@ -262,9 +286,9 @@ def build_color_legend(cfg, x0, y_start, dx, dy, unique_colors, color_by):
                 show_legend=False
             )
         )
-        label_df = pd.DataFrame({"x":[lx + dx], "y":[ly], "text":[str(val)]})
+        label_df = pd.DataFrame({"x": [lx + dx], "y": [ly], "text": [str(val)]})
         color_labels.append(
-            hv.Labels(label_df, kdims=['x','y'], vdims=['text']).opts(
+            hv.Labels(label_df, kdims=['x', 'y'], vdims=['text']).opts(
                 text_font_size='15pt',
                 text_color='black',
                 text_align='left',
@@ -296,18 +320,24 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
     df = pd.read_csv(file_name, low_memory=False, sep='\t')
 
     df = ensure_df_columns(df, file_name, annotation_folder, tsv_dir)
-    
+
     logger.info(f"Loaded {file_name} with {len(df)} rows")
     filter_cols = df.columns
     filter_cols = [col for col in filter_cols if 'sig_prob' not in col]
     filter_cols = [col for col in filter_cols if 'soft_prob' not in col]
     filter_cols = [col for col in filter_cols if 'UMAP' not in col]
-    filter_cols = [col for col in filter_cols if col not in ['cell_id', 'top_class', 'top_3_classes', 'top_3_classes_names', 'id']]
+    filter_cols = [
+        col for col in filter_cols if col not in [
+            'cell_id',
+            'top_class',
+            'top_3_classes',
+            'top_3_classes_names',
+            'id']]
 
     borders = get_borders(df)
     initial_xlim = borders["x_range"]
     initial_ylim = borders["y_range"]
-    
+
     # in the condition column replace ActinomycinD with ActD, SodiumArsenite with SA
     if 'condition' in df.columns:
         df['condition'] = df['condition'].replace({
@@ -327,9 +357,14 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
     # trigger for updating the plot after a tap/zoom
     trigger = pn.widgets.Toggle(visible=False)
 
-    # ---------------------------------------------- WIDGET DEFINITIONS -----------------------------------------------------
+    # ---------------------------------------------- WIDGET DEFINITIONS ------
     # Color by widget
-    color_by = pn.widgets.Select(name="Color by", options=filter_cols, value="protein", sizing_mode="stretch_width", min_width=cfg.min_width)
+    color_by = pn.widgets.Select(
+        name="Color by",
+        options=filter_cols,
+        value="protein",
+        sizing_mode="stretch_width",
+        min_width=cfg.min_width)
 
     # Filters based on columns elements
     filters, filter_widgets = create_filter_controls(df, filter_cols, cfg)
@@ -373,7 +408,6 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
         highlighted_df = filtered[filtered["is_highlighted"]]
         filtered = filtered[filtered["is_highlighted"] == False]
         hover_tool = HoverTool(tooltips=build_hover_tooltip(cfg))
-
 
         layers = []
         for marker, subdf in filtered.groupby("marker_type"):
@@ -440,7 +474,7 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
         # ---------- MANUAL SHAPE LEGEND ----------
         n_colors = n_colors if show_color_legend else 0
         if show_shape_legend:
-            shape_ov = build_shape_legend(cfg, x0, y_start, dx, dy, n_colors)         
+            shape_ov = build_shape_legend(cfg, x0, y_start, dx, dy, n_colors)
             overlays.append(shape_ov)
 
         combined = hv.Overlay(overlays).opts(aspect=None, responsive=True)
@@ -457,7 +491,7 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
 
     central_plot = pn.panel(plot_umap)
     left_sidebar.sizing_mode = 'stretch_both'
-    left_sidebar.max_width = int(cfg.min_width*1.1)
+    left_sidebar.max_width = int(cfg.min_width * 1.1)
     right_sidebar.sizing_mode = 'stretch_both'
     right_sidebar.max_width = cfg.min_width
     central_plot.sizing_mode = 'stretch_both'
