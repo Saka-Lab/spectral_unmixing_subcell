@@ -13,7 +13,7 @@ from utils.plot_utils import load_data
 
 app = typer.Typer(add_completion=False)
 
-DEFAULT_CONDITION_ORDER = ["ActD", "Untreated", "SA"]
+DEFAULT_CONDITION_ORDER = ["Untreated", "ActD", "SA"]
 DEFAULT_MARKERS = ["NPM1", "G3BP1"]
 
 
@@ -32,6 +32,8 @@ def load_plot_configs():
 def save_plot(fig, filename: str, output_dir: Path, dpi: int = 300) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_dir / f"{filename}.png", dpi=dpi)
+    # save as SVG for vector graphics
+    fig.savefig(output_dir / f"{filename}.svg", format="svg")
     plt.close(fig)
 
 

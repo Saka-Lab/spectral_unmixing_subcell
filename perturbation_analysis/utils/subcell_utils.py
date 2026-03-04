@@ -27,43 +27,42 @@ import torch
 import h5py
 
 
-
 classification = {
-    "DAPI":	"Nucleoplasm",
-    "TOMM20":	"Mitochondria",
-    "alphaTUBULIN":	"Microtubules",
-    "SC35":	"Nuclear speckles",
-    "SP100":	"Nuclear bodies",
-    "WGA":	"Plasma membrane",
-    "SON":	"Nuclear speckles",
-    "VIMENTIN":	"Intermediate filaments",
-    "LAMP1":	"Lysosomes",
-    "LAMP2":	"Lysosomes",
-    "COILIN":	"Nuclear bodies",
-    "GM130":	"Golgi apparatus",
-    "G3BP1":	"Cytoplasmic bodies",
-    "TFAM":	"Mitochondria",
-    "Ki67":	"Nucleoli",
-    "NPM1":	"Nucleoli"
+    "DAPI": "Nucleoplasm",
+    "TOMM20": "Mitochondria",
+    "alphaTUBULIN": "Microtubules",
+    "SC35": "Nuclear speckles",
+    "SP100": "Nuclear bodies",
+    "WGA": "Plasma membrane",
+    "SON": "Nuclear speckles",
+    "VIMENTIN": "Intermediate filaments",
+    "LAMP1": "Lysosomes",
+    "LAMP2": "Lysosomes",
+    "COILIN": "Nuclear bodies",
+    "GM130": "Golgi apparatus",
+    "G3BP1": "Cytoplasmic bodies",
+    "TFAM": "Mitochondria",
+    "Ki67": "Nucleoli",
+    "NPM1": "Nucleoli"
 }
 
 acceptable_classification = {
-    "DAPI":	["Nuclear membrane", "Nucleoli", "Nucleoli rim", "Nuclear speckles", "Nucleoli fibrillar center", "Nuclear bodies"],
-    "TOMM20":	[""],
-    "alphaTUBULIN":	["Microtubule ends", "Centrosome", "Cytosol"],
-    "SC35":	["Nucleoplasm"],
-    "SP100":	["Nucleoplasm"],
-    "WGA":	["Golgi apparatus", "Nuclear membrane"],
-    "SON":	["Nucleoplasm"],
-    "VIMENTIN":	["Cytosol", "Focal adhesion sites"],
-    "LAMP1":	["Vesicles", "Cytoplasmic bodies"],
-    "LAMP2":	["Vesicles", "Cytoplasmic bodies"],
-    "COILIN":	["Nucleoplasm"],
-    "GM130":	["Vesicles"],
-    "G3BP1":	["Cytosol", "Stress granules"],
-    "TFAM":	[""],
-    "Ki67":	["Nucleoli rim", "Nucleoli fibrillar center", "Nuclear membrane"],
-    "NPM1":	["Nucleoli rim", "Nucleoli fibrillar center", "Nuclear speckles"]
+    "DAPI": ["Nuclear membrane", "Nucleoli", "Nucleoli rim", "Nuclear speckles", "Nucleoli fibrillar center", "Nuclear bodies"],
+    "TOMM20": [""],
+    "alphaTUBULIN": ["Microtubule ends", "Centrosome", "Cytosol"],
+    "SC35": ["Nucleoplasm"],
+    "SP100": ["Nucleoplasm"],
+    "WGA": ["Golgi apparatus", "Nuclear membrane"],
+    "SON": ["Nucleoplasm"],
+    "VIMENTIN": ["Cytosol", "Focal adhesion sites"],
+    "LAMP1": ["Vesicles", "Cytoplasmic bodies"],
+    "LAMP2": ["Vesicles", "Cytoplasmic bodies"],
+    "COILIN": ["Nucleoplasm"],
+    "GM130": ["Vesicles"],
+    "G3BP1": ["Cytosol", "Stress granules"],
+    "TFAM": [""],
+    "Ki67": ["Nucleoli rim", "Nucleoli fibrillar center", "Nuclear membrane"],
+    "NPM1": ["Nucleoli rim", "Nucleoli fibrillar center", "Nuclear speckles"]
 }
 
 
@@ -301,9 +300,9 @@ class Subcell:
                             -3:]
                         max_3_location_classes.reverse()
                         max_3_location_names = (
-                                inference.CLASS2NAME[max_3_location_classes[0]] + ","
-                                + inference.CLASS2NAME[max_3_location_classes[1]] + ","
-                                + inference.CLASS2NAME[max_3_location_classes[2]]
+                            inference.CLASS2NAME[max_3_location_classes[0]] + ","
+                            + inference.CLASS2NAME[max_3_location_classes[1]] + ","
+                            + inference.CLASS2NAME[max_3_location_classes[2]]
                         )
 
                     new_row = []
@@ -319,11 +318,6 @@ class Subcell:
 
                     df.loc[len(df.index)] = new_row
 
-                    log_message = "- Saved results for " + curr_set_arr[4].strip()
-                    if classifier_paths:
-                        log_message = log_message + ", locations predicted [" + max_3_location_names + "]"
-                    config["log"].info(log_message)
-
             df.to_csv(config['results_file'], index=False)
             logger.info(f"Results saved to {config['results_file']}")
             self._process_results(df, config["log"], config['results_file'])
@@ -337,9 +331,9 @@ class Subcell:
         df = pd.concat([df, parsed_df], axis=1)
 
         df['classification'] = df.apply(lambda x: 'Correct' if x['top_class_name'] == classification[x['protein']]
-        else ('Acceptable' if acceptable_classification[x['protein']] is not None
-                              and x['top_class_name'] in acceptable_classification[x['protein']]
-              else "Wrong"),
+                                        else ('Acceptable' if acceptable_classification[x['protein']] is not None
+                                              and x['top_class_name'] in acceptable_classification[x['protein']]
+                                              else "Wrong"),
                                         axis=1)
 
         log.info(f"Found {df['classification'].value_counts().to_dict()} classifications")
@@ -493,7 +487,8 @@ def preprocess_tensor(
 
     # check if all channels are 0 to 1 scaled
     for channel in img:
-        assert channel.min() == 0 and (channel.max() == 1 or channel.max() == 0), f"Channel {channel} not in range [0, 1], got {channel.min()} to {channel.max()}"
+        assert channel.min() == 0 and (channel.max() == 1 or channel.max() == 0), \
+            f"Channel {channel} not in range [0, 1], got {channel.min()} to {channel.max()}"
 
     return img
 
@@ -538,4 +533,3 @@ def protein_image_generator(full_img, channel_map, protein_channels):
         img_channels = ref_channels + [protein_channel]
         selected_channels = torch.stack([full_img[i] for i in img_channels], dim=0)
         yield selected_channels, protein_name
-

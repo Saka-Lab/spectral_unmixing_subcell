@@ -70,6 +70,7 @@ pixi install -e download -e plotter -e preprocess-cu118 -e subcell-cu118
 This installs the dependencies for all environments related to this project.
 If you don't have a NVIDIA GPU or nvidia-smi is not a valid command please install the cpu
 dependencies as mentioned or MacOS.
+
 </details>
 
 ## Expected directory structure and naming
@@ -135,9 +136,9 @@ The raw image data should be stored in a directory called `perturbation_data`, w
 directory after using the download CLI.
 In this directory, for running the workflow with default parameters, it is expected that there is a directory called 
 `raw`. This directory contains experiment directories with names of the user's choice, that should contain either
-`.lif` images. The dimension names and order of these images is expected to be `czyx`. The images
-can contain one or multiple scenes (Fields of View). The `perturbation_data` directory also contains a directory 
-`annotations` containing a csv file with cell cycle annotations of the cells.
+`.lif` images. The dimension names and order of these images is expected to be `czyx`.
+The images can contain one or multiple scenes (Fields of View).
+The `perturbation_data` directory also contains a directory `annotations` containing a csv file with cell cycle annotations of the cells.
 Furthermore, a directory `preprocessing_results` in `perturbation_data` contains a directory with the corrected 
 segmentations. By default these segmentations will be used for SubCell, but one can run the segmentation part of the
 SubCell workflow to get the uncorrected segmentations.
@@ -222,11 +223,11 @@ However, this is not the default.
 Individual cell images are then fed to the SubCell model of choice for protein localization classification.
 
 SubCell is a suite of multiple models that were trained with different reference channels and different objectives.
-In this work we used two reference channels (alpha-tubulin and DAPI) and the third channel was the protein of interest (each of the 15 acquired in the panel).
+In this work we used two reference channels (alphaTUBULIN and DAPI) and the third channel was the protein of interest (each of the 15 acquired in the panel).
 This setting corresponds to the argument `--model-channels rbg`.
 The other possible combinations (as can be seen in the models/ directory) are:
 - `--model-channels bg`, which uses DAPI and protein of interest;
-- `--model-channels rybg`, which uses alpha-tubulin, endoplasmic reticulum, DAPI, and protein of interest;
+- `--model-channels rybg`, which uses alphaTUBULIN, endoplasmic reticulum, DAPI, and protein of interest;
 - `--model-channels ybg`, which uses endoplasmic reticulum, DAPI, and protein of interest.
 
 SubCell models were trained with different objectives:
@@ -282,49 +283,31 @@ Optionally, input directory and output file name can be adjusted:
 ![export_umap_help](readme_images/export_umap_help.png)
 
 ### 5. Reproducing figures
+> **Note on reproducibility:** UMAP embeddings can vary slightly between runs because this method is sensitive to initialization and optimization details. The overall patterns in the UMAP plot will remain consistent with the patterns in the underlying data, but exact point placement can differ slightly. To ensure full reproducibility of the manuscript figures, we also provide precomputed SubCell output as a `.gz` file that can be unzipped and used directly, the file is located in perturbation_analysis/subcell/results. If the file is moved to the subcell results directory (perturbation_data/subcell_results/10.0_99.99) it will be used to create the figures.
+
 **Figure 5c (SVG)**
 
-The hv_plot.py file should contain:
-```
-color_by_val = 'protein'
-filters_val = {
-    "CellCycle": ["Interphase"],
-}
-```
-The umap_config.yaml should have all proteins set to use the circle marker.
+`pixi run reproduce_fig5c`
+
+This exports `perturbation_data/plots/umap/fig5c.svg`.
 
 **Figure 5d (SVG)**
 
-The hv_plot.py file should contain:
-```
-color_by_val = 'condition'
-filters_val = {
-    "CellCycle": ["Interphase"],
-    "protein": ['G3BP1', 'alphaTUBULIN', 'NPM1'],
-}
-```
-```
-protein:
-    alpha-tubulin: diamond
-    NPM1: square
-```
-The umap_config.yaml should have alpha-tubulin set to diamond and NPM1 set to square.
+`pixi run reproduce_fig5d`
+
+This exports `perturbation_data/plots/umap/fig5d.svg`.
 
 **Supplementary figure 5 (SVG)**
 
-The hv_plot.py file should contain:
-```
-color_by_val = 'condition'
-filters_val = {
-    "CellCycle": ["Interphase"],
-}
-```
-The umap_config.yaml should have all proteins set to use the circle marker.
+`pixi run reproduce_supp_fig5`
+
+This exports `perturbation_data/plots/umap/supp_fig5.svg`.
 
 **Figures 5e/5f**
 
-These figures can be reproduced by running the box_plot.py file.
-The script generates one plot per marker.
+`pixi run reproduce_fig5ef`
+
+This generates one plot per marker.
 For each pair of condition and subcellular_location, a boxplot is created visualizing the corresponding distribution found in the results file.
 
 The script can also be used to create boxplots for the other markers and has additional parameters:

@@ -11,7 +11,7 @@ from bokeh.models import HoverTool
 
 def load_data(input_dir, annotations_dir, round_name, model, interphase_only=False, rename_map=None):
     data_file = Path(input_dir) / f"{round_name}_{model}.tsv"
-    annotation_file = Path(annotations_dir) / f"{round_name}_{model}.csv"
+    annotation_file = Path(annotations_dir) / f"{round_name}_{model}_annotations.tsv"
     # Read data
     # check if the file exists
     if data_file.exists():
@@ -20,28 +20,19 @@ def load_data(input_dir, annotations_dir, round_name, model, interphase_only=Fal
         raise FileNotFoundError(f"Data file not found: {data_file}")
     # check if annotations exist
     if annotation_file.exists():
-        annotations = pd.read_csv(annotation_file)
+        annotations = pd.read_csv(annotation_file, sep="\t")
         # check if unique_cell_id column exists in both dataframes
         if 'unique_cell_id' not in annotations.columns:
-            logger.warning(
-                f"'unique_cell_id' column not found in annotations data file {annotation_file}. Trying to create it from 'Image' and 'Label' columns.")
-            annotations["unique_cell_id"] = annotations["Image"].astype(str) + "_" + annotations["Label"].astype(str)
+            raise ValueError(f"'unique_cell_id' column not found in annotation file {annotation_file}. It is required to merge with data.")
 
         if 'unique_cell_id' not in df.columns:
             raise ValueError(
                 f"'unique_cell_id' column not found in data file {data_file}. It is required to merge with annotations.")
         df = pd.merge(df, annotations, on="unique_cell_id", how="left")
-        # check if cell_cycle_phase or CellCycle column exists, if not raise a warning
-        if 'cell_cycle_phase' not in df.columns and 'CellCycle' not in df.columns:
-            logger.warning(
-                f"Neither 'cell_cycle_phase' nor 'CellCycle' column found in merged dataframe. Interphase filtering will be skipped.")
-        else:
-            cell_cycle_col = 'cell_cycle_phase' if 'cell_cycle_phase' in df.columns else 'CellCycle' if 'CellCycle' in df.columns else None
-            if cell_cycle_col is None:
-                raise ValueError("No cell cycle column found for interphase filtering.")
-            df = df.rename(columns={cell_cycle_col: 'cell_cycle_phase'})
 
         if interphase_only:
+            if 'cell_cycle_phase' not in df.columns:
+                raise ValueError(f"'cell_cycle_phase' column not found in merged dataframe. It is required to filter for interphase cells.")
             df = df[df["cell_cycle_phase"] == "Interphase"]
     else:
         logger.warning(f"Annotation file not found: {annotation_file}. Proceeding without annotations.")
@@ -143,9 +134,6 @@ def ensure_df_columns(df, df_path, annotation_folder=None, tsv_dir=None):
         raise ValueError(f"DataFrame {df_path} contains NaN values. Please check the input data.")
 
     if f'UMAP1' not in df.columns:
-        if f'UMAP1' in df.columns:
-            df = df.drop(columns=[f'UMAP1', f'UMAP2'])
-
         logger.info(f"Calculating UMAP")
         embeddings = df[[col for col in df.columns if col.startswith("feat")]].to_numpy()
         umap_model = umap.UMAP(n_neighbors=20, metric="cosine", min_dist=0.5, random_state=42)
@@ -167,16 +155,11 @@ def ensure_df_columns(df, df_path, annotation_folder=None, tsv_dir=None):
         df.to_csv(save_path, index=False, sep='\t')
 
     if annotation_folder is not None:
-        annotation_file = Path(annotation_folder) / (Path(df_path).stem + "_annotationsBoxData.csv")
+        annotation_file = Path(annotation_folder) / (Path(df_path).stem + "_annotations.tsv")
         if annotation_file.exists():
             logger.info(f"Loading annotations from {annotation_file}")
-            df_annotations = pd.read_csv(annotation_file)
-
-            if "Label" in df_annotations.columns:
-                df_annotations.rename(columns={"Label": "unique_cell_id"}, inplace=True)
-            annotation_columns = df_annotations.columns
-            df_annotations['Image'] = df_annotations['Image'].str.replace('.tif', '', regex=False)
-            df_annotations['unique_cell_id'] = df_annotations['Image'] + '_' + df_annotations['unique_cell_id'].astype(str)
+            df_annotations = pd.read_csv(annotation_file, sep="\t")
+            print(df_annotations.columns)
 
             # check whether unique_cell_id exist in both dataframes
             if 'unique_cell_id' not in df_annotations.columns:
@@ -190,7 +173,7 @@ def ensure_df_columns(df, df_path, annotation_folder=None, tsv_dir=None):
             if common_cols:
                 raise ValueError(
                     f"Data file {df_path} and annotation file {annotation_file} have common columns: {common_cols}. Please rename these columns to avoid confusion after merge.")
-
+            annotation_columns = [col for col in df_annotations.columns if col != 'unique_cell_id']
             df = df.merge(df_annotations, on='unique_cell_id', how='left', validate='many_to_one')
             for col in annotation_columns:
                 if df[col].isna().any():
@@ -321,6 +304,11 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
 
     df = ensure_df_columns(df, file_name, annotation_folder, tsv_dir)
 
+    # sort by condition
+    if 'condition' in df.columns:
+        df['condition'] = pd.Categorical(df['condition'], categories=['Untreated', 'ActD', 'SA'], ordered=True)
+        df = df.sort_values('condition')
+
     logger.info(f"Loaded {file_name} with {len(df)} rows")
     filter_cols = df.columns
     filter_cols = [col for col in filter_cols if 'sig_prob' not in col]
@@ -337,13 +325,6 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
     borders = get_borders(df)
     initial_xlim = borders["x_range"]
     initial_ylim = borders["y_range"]
-
-    # in the condition column replace ActinomycinD with ActD, SodiumArsenite with SA
-    if 'condition' in df.columns:
-        df['condition'] = df['condition'].replace({
-            'ActinomycinD': 'ActD',
-            'SodiumArsenite': 'SA'
-        })
 
     # legend computations
     x0 = initial_xlim[0] + 0.75 * (initial_xlim[1] - initial_xlim[0])
@@ -397,7 +378,7 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
     df["is_highlighted"] = df["unique_cell_id"].isin(cfg.highlighted_cells)
 
     @pn.depends(color_by, alpha_slider.param.value_throttled, trigger, **filters)
-    def plot_umap(color_by, alpha, show_color_legend=True, show_shape_legend=True, **kwargs):
+    def plot_umap(color_by, alpha, trigger, show_color_legend=True, show_shape_legend=False, **kwargs):
         # Filter data
         filtered = df
         for col, selected in kwargs.items():
@@ -448,7 +429,7 @@ def create_tab(file_name, cfg, annotation_folder=None, tsv_dir=None):
                     alpha=1.0,
                     line_color=cfg.highlight_color,
                     line_width=cfg.highlight_width,
-                    line_dash="dashed",
+                    line_dash="solid",
                     tools=[hover_tool, "tap"],
                     show_legend=False,
                 )
