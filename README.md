@@ -164,7 +164,7 @@ The workflow starts from raw `.lif` images. These are split into individual FOV
 images by running a CLI. To run with default parameters, in the command line ensure that you are in this repository 
 directory and run: 
 
-`pixi run split_images`
+`pixi run split-images`
 
 Additional parameters can be provided:
 ![split_lif](readme_images/split_help.png)
