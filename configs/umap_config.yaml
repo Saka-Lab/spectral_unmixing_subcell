@@ -9,7 +9,6 @@ max_legend_entries: 31  # maximum number of entries to show in legend (if all su
 # ======================
 # Highlighting
 # ======================
-highlighted_cells: ['FOV3_6', 'FOV3_8']
 highlight_color: black
 highlight_width: 3
 
