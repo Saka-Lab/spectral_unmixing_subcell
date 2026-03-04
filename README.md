@@ -264,6 +264,8 @@ Optionally, input directory and output file name can be adjusted:
 ![export_umap_help](readme_images/export_umap_help.png)
 
 ### 5. Reproducing figures
+> **Note on reproducibility:** UMAP embeddings can vary slightly between runs because this method is sensitive to initialization and optimization details. The overall patterns in the UMAP plot will remain consistent with the patterns in the underlying data, but exact point placement can differ slightly. To ensure full reproducibility of the manuscript figures, we also provide precomputed SubCell output as a `.gz` file that can be unzipped and used directly, the file is located in perturbation_analysis/subcell/results.
+
 **Figure 5c (SVG)**
 
 `pixi run reproduce_fig5c`
