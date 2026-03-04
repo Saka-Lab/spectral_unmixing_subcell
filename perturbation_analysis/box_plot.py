@@ -13,7 +13,7 @@ from utils.plot_utils import load_data
 
 app = typer.Typer(add_completion=False)
 
-DEFAULT_CONDITION_ORDER = ["ActD", "Untreated", "SA"]
+DEFAULT_CONDITION_ORDER = ["Untreated", "ActD", "SA"]
 DEFAULT_MARKERS = ["NPM1", "G3BP1"]
 
 

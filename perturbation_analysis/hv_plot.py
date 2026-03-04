@@ -55,7 +55,7 @@ EXPORT_PRESETS = {
         },
         "shape_by": "protein",
         "show_shape_legend": True,
-        "highlighted_cells": ["SA_FOV1_70", "SA_FOV2_70", "ActD_FOV1_19", "ActD_FOV1_19", "Untreated_FOV1_102", "Untreated_FOV2_102"],
+        "highlighted_cells": ["SA_FOV1_70", "ActD_FOV1_19", "Untreated_FOV1_102"],
         "marker_types": {
             "protein": {
                 "alphaTUBULIN": "diamond",
